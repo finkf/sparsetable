@@ -5,10 +5,9 @@ type Automaton interface {
 	// Delta does one transition from the current state(s) to the next.
 	// Delta returns false if no transition could be done.
 	Delta(byte) bool
-	// Final returns true if a final state is active in the automaton.
-	Final() bool
-	// Data returns the attached data of the current final state(s).
-	Data() interface{}
+	// Final returns true if a final state is active in the automaton and its
+	// asscoiated data. If not it return nil, false.
+	Final() (interface{}, bool)
 	// Initialize initializes the automaton.
 	// Intitialize should be the first function called on the automaton
 	// before any matching.
@@ -16,13 +15,13 @@ type Automaton interface {
 }
 
 // Accepts tests if the given automaton accets the given string.
-func Accepts(a Automaton, str string) bool {
+func Accepts(a Automaton, str string) (interface{}, bool) {
 	a.Initialize()
 	// use explicit loop to iterate over the bytes of the string
 	for i := 0; i < len(str); i++ {
 		// fmt.Printf("[%v] str[%v] = %v\n", str, i, str[i])
 		if !a.Delta(str[i]) {
-			return false
+			return nil, false
 		}
 	}
 	return a.Final()
@@ -45,9 +44,9 @@ func DeltaStar(a Automaton, str string, sync byte) (interface{}, int) {
 		if !a.Delta(c) {
 			return data, pos
 		}
-		if a.Final() {
+		if d, final := a.Final(); final {
 			pos = i + 1
-			data = a.Data()
+			data = d
 		}
 	}
 	return data, pos
