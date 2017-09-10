@@ -7,14 +7,14 @@ import (
 // TmpStateTransition represent an outgoing transition from a temporary
 // state.
 type TmpStateTransition struct {
-	Char   byte
-	Target uint32
+	char   byte
+	target uint32
 }
 
 // String returns a strin representation for a temporary state
 // transition. It is used basically for hashing.
 func (t TmpStateTransition) String() string {
-	return fmt.Sprintf("%c %d", t.Char, t.Target)
+	return fmt.Sprintf("%c %d", t.char, t.target)
 }
 
 // TmpState represents a state that should be inerter into a sparse table.
@@ -50,7 +50,7 @@ func (t *SparseTable) Add(tmp TmpState) uint32 {
 func (t *SparseTable) doInsert(i uint32, tmp TmpState) {
 	var next byte
 	if len(tmp.Transitions) > 0 {
-		next = tmp.Transitions[0].Char
+		next = tmp.Transitions[0].char
 	}
 	if tmp.Final {
 		t.Cells[i] = FinalCell(tmp.Data, next)
@@ -60,10 +60,10 @@ func (t *SparseTable) doInsert(i uint32, tmp TmpState) {
 	for j, trans := range tmp.Transitions {
 		next = 0
 		if (j + 1) < len(tmp.Transitions) {
-			next = tmp.Transitions[j+1].Char
+			next = tmp.Transitions[j+1].char
 		}
-		pos := i + uint32(trans.Char)
-		t.Cells[pos] = TransitionCell(trans.Target, trans.Char, next)
+		pos := i + uint32(trans.char)
+		t.Cells[pos] = TransitionCell(trans.target, trans.char, next)
 	}
 }
 
@@ -78,7 +78,7 @@ func (t *SparseTable) findFreeTableCell(tmp TmpState) uint32 {
 
 func (t *SparseTable) resize(i uint32, tmp TmpState) {
 	if len(tmp.Transitions) > 0 {
-		i += uint32(tmp.Transitions[len(tmp.Transitions)-1].Char)
+		i += uint32(tmp.Transitions[len(tmp.Transitions)-1].char)
 	}
 	for uint32(len(t.Cells)) < (i + 1) {
 		t.Cells = append(t.Cells, Cell{})
@@ -86,11 +86,11 @@ func (t *SparseTable) resize(i uint32, tmp TmpState) {
 }
 
 func (t *SparseTable) fits(i uint32, tmp TmpState) bool {
-	if t.Cells[i].typ != EmptyCellType {
+	if !t.Cells[i].Empty() {
 		return false
 	}
 	for _, trans := range tmp.Transitions {
-		if t.Cells[i+uint32(trans.Char)].typ != EmptyCellType {
+		if t.Cells[i+uint32(trans.char)].typ != emptyCellType {
 			return false
 		}
 	}
@@ -102,7 +102,7 @@ func (t *SparseTable) nextFreeCell() {
 		if uint32(len(t.Cells)) <= t.free {
 			t.Cells = append(t.Cells, Cell{})
 		}
-		if t.Cells[t.free].typ == EmptyCellType {
+		if t.Cells[t.free].Empty() {
 			break
 		}
 		t.free += 1

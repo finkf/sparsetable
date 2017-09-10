@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// SparseTableDFABuilder is used to build a SparseTableDFA.
 type SparseTableDFABuilder struct {
 	register  map[string]uint32
 	curstr    []byte
@@ -13,10 +14,13 @@ type SparseTableDFABuilder struct {
 	table     SparseTable
 }
 
+// NewSparseTableDFABuilder return a new instance of a SparseTableDFABuilder.
 func NewSparseTableDFABuilder() *SparseTableDFABuilder {
 	return &SparseTableDFABuilder{register: make(map[string]uint32)}
 }
 
+// Add adds a (string, value) pair to the sparse table. Add returns an error
+// iff the added strings are not in byte-wise lexicographical order.
 func (b *SparseTableDFABuilder) Add(str string, data uint32) error {
 	nextstr := []byte(str)
 	if b.curstr == nil {
@@ -25,7 +29,7 @@ func (b *SparseTableDFABuilder) Add(str string, data uint32) error {
 		return nil
 	}
 	if !(bytes.Compare(b.curstr, nextstr) < 0) {
-		return fmt.Errorf("not in lexicographical order: %q >= %q",
+		return fmt.Errorf("add: not in lexicographical order: %q >= %q",
 			b.curstr, nextstr)
 	}
 	b.initTmpStates()
@@ -36,6 +40,7 @@ func (b *SparseTableDFABuilder) Add(str string, data uint32) error {
 	return nil
 }
 
+// Build finishes the building of the automaton and returns it.
 func (b *SparseTableDFABuilder) Build() *SparseTableDFA {
 	if b.curstr == nil {
 		return &SparseTableDFA{}
@@ -65,7 +70,7 @@ func (b *SparseTableDFABuilder) insertSuffix(str []byte, prefix int) {
 		b.tmpStates[i] = TmpState{Final: false, Data: 0}
 		b.tmpStates[i-1].Transitions = append(
 			b.tmpStates[i-1].Transitions,
-			TmpStateTransition{Char: str[i-1], Target: target},
+			TmpStateTransition{char: str[i-1], target: target},
 		)
 	}
 }

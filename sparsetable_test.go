@@ -18,9 +18,9 @@ func TestAddEmpty(t *testing.T) {
 			t.Errorf("[%d] expected pos = %d; got pos = %d\n",
 				i, tc.pos, x)
 		}
-		if st.Cells[tc.pos].Final() != tc.final {
+		if _, final := st.Cells[tc.pos].Final(); final != tc.final {
 			t.Errorf("[%d] expected cell.final = %t; got cell.final = %t\n",
-				i, tc.final, st.Cells[tc.pos].Final())
+				i, tc.final, final)
 		}
 		// only final state cells have data
 		var f uint32
@@ -62,17 +62,17 @@ func TestAdd(t *testing.T) {
 				i, tc.pos, x)
 		}
 		for j, tt := range tc.ts {
-			cell := st.Cells[tc.pos+uint32(tt.Char)]
-			if cell.typ != TransitionCellType {
+			cell := st.Cells[tc.pos+uint32(tt.char)]
+			if cell.typ != transitionCellType {
 				t.Errorf("[%d:%d] expected transition cell\n", i, j)
 			}
-			if cell.char != tt.Char {
+			if cell.char != tt.char {
 				t.Errorf("[%d:%d] expected char = %c; got char = %c\n",
-					i, j, tt.Char, cell.char)
+					i, j, tt.char, cell.char)
 			}
-			if cell.data != tt.Target {
+			if cell.data != tt.target {
 				t.Errorf("[%d:%d] expected data = %d; got data = %d\n",
-					i, j, tt.Char, cell.data)
+					i, j, tt.char, cell.data)
 			}
 		}
 	}

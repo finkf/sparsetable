@@ -18,7 +18,7 @@ var teststrs = []string{
 
 func accepts(dfa *SparseTableDFA, str string) bool {
 	s := dfa.Initial()
-	for i := 0; i < len(str) && s != 0; i += 1 {
+	for i := 0; i < len(str) && s != 0; i++ {
 		s = dfa.Delta(s, str[i])
 	}
 	_, final := dfa.Final(s)
@@ -88,7 +88,7 @@ func TestEachTransition(t *testing.T) {
 	dfa := b.Build()
 	chars := make(map[byte]bool)
 	dfa.EachTransition(dfa.Initial(), func(cell Cell) {
-		if cell.typ != TransitionCellType {
+		if cell.typ != transitionCellType {
 			t.Errorf("expected transition cell; got %s", cell)
 		}
 		chars[cell.char] = true

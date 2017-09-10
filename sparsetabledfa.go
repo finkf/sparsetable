@@ -23,7 +23,7 @@ func (d *SparseTableDFA) Delta(s uint32, c byte) uint32 {
 	}
 	s -= 1
 	if !d.table[s].State() ||
-		d.table[s+o].typ != TransitionCellType ||
+		d.table[s+o].typ != transitionCellType ||
 		d.table[s+o].char != c {
 		return 0
 	}
@@ -32,7 +32,7 @@ func (d *SparseTableDFA) Delta(s uint32, c byte) uint32 {
 
 func (d *SparseTableDFA) Final(s uint32) (uint32, bool) {
 	n := uint32(len(d.table))
-	if s <= 0 || n <= s || d.table[s-1].typ != FinalCellType {
+	if s <= 0 || n <= s || d.table[s-1].typ != finalCellType {
 		return 0, false
 	}
 	return d.table[s-1].data, true
@@ -45,7 +45,7 @@ func (d *SparseTableDFA) EachTransition(s uint32, f func(Cell)) {
 	}
 	for i := d.table[s-1].next; i > 0; i = d.table[s-1+uint32(i)].next {
 		cell := d.table[s+uint32(i)-1]
-		if cell.typ != TransitionCellType {
+		if cell.typ != transitionCellType {
 			panic("invalid cell type in EachTransition: not a transition cell")
 		}
 		f(cell)
@@ -61,14 +61,14 @@ func (d *SparseTableDFA) Dot(out io.Writer) {
 	fmt.Fprintf(out, " -1 -> %d %s", d.initial-1, dot)
 	for i, cell := range d.table {
 		switch cell.typ {
-		case FinalCellType:
+		case finalCellType:
 			fmt.Fprintf(out, " %d[peripheries=2] %s", i, dot)
-		case NonFinalCellType:
+		case nonFinalCellType:
 			fmt.Fprintf(out, " %d[peripheries=1] %s", i, dot)
-		case TransitionCellType:
+		case transitionCellType:
 			fmt.Fprintf(out, " %d -> %d [label=%q] %s",
 				i-int(cell.char), cell.data, str(cell.char), dot)
-		case EmptyCellType:
+		case emptyCellType:
 		}
 	}
 	fmt.Fprintf(out, "} %s", dot)
