@@ -1,8 +1,10 @@
 package fsa
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"sort"
 	"unicode"
 )
 
@@ -10,6 +12,20 @@ import (
 type SparseTableDFA struct {
 	table   []Cell
 	initial uint32
+}
+
+// NewSparseTableDFA builds a minimized sparse table DFA from a list of strings.
+func NewSparseTableDFA(strs ...string) *SparseTableDFA {
+	b := NewSparseTableDFABuilder()
+	sort.Slice(strs, func(i, j int) bool {
+		return bytes.Compare([]byte(strs[i]), []byte(strs[j])) < 0
+	})
+	for _, str := range strs {
+		if err := b.Add(str, 1); err != nil {
+			panic(err)
+		}
+	}
+	return b.Build()
 }
 
 // Initial returns the initial state of the DFA.
