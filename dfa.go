@@ -17,7 +17,7 @@ type DFA struct {
 // NewSparseTableDFA builds a minimized sparse table DFA from a list of strings.
 // NewSparseTableDFA panics if the build process fails.
 func NewSparseTableDFA(strs ...string) *DFA {
-	b := NewSparseTableDFABuilder()
+	b := NewBuilder()
 	sort.Slice(strs, func(i, j int) bool {
 		return bytes.Compare([]byte(strs[i]), []byte(strs[j])) < 0
 	})

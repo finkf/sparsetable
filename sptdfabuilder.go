@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// SparseTableDFABuilder is used to build a DFA.
-type SparseTableDFABuilder struct {
+// Builder is used to build a DFA.
+type Builder struct {
 	register  map[string]uint32
 	curstr    []byte
 	curdat    uint32
@@ -14,14 +14,14 @@ type SparseTableDFABuilder struct {
 	table     SparseTable
 }
 
-// NewSparseTableDFABuilder return a new instance of a SparseTableDFABuilder.
-func NewSparseTableDFABuilder() *SparseTableDFABuilder {
-	return &SparseTableDFABuilder{register: make(map[string]uint32)}
+// NewSparseTableDFABuilder return a new instance of a Builder.
+func NewBuilder() *Builder {
+	return &Builder{register: make(map[string]uint32)}
 }
 
 // Add adds a (string, value) pair to the sparse table. Add returns an error
 // iff the added strings are not in byte-wise lexicographical order.
-func (b *SparseTableDFABuilder) Add(str string, data uint32) error {
+func (b *Builder) Add(str string, data uint32) error {
 	nextstr := []byte(str)
 	if b.curstr == nil {
 		b.curstr = nextstr
@@ -41,7 +41,7 @@ func (b *SparseTableDFABuilder) Add(str string, data uint32) error {
 }
 
 // Build finishes the building of the automaton and returns it.
-func (b *SparseTableDFABuilder) Build() *DFA {
+func (b *Builder) Build() *DFA {
 	if b.curstr == nil {
 		return &DFA{}
 	}
@@ -55,7 +55,7 @@ func (b *SparseTableDFABuilder) Build() *DFA {
 	}
 }
 
-func (b *SparseTableDFABuilder) initTmpStates() {
+func (b *Builder) initTmpStates() {
 	n := len(b.curstr)
 	for len(b.tmpStates) < n+1 {
 		b.tmpStates = append(b.tmpStates, TmpState{})
@@ -64,7 +64,7 @@ func (b *SparseTableDFABuilder) initTmpStates() {
 	b.tmpStates[n].Data = b.curdat
 }
 
-func (b *SparseTableDFABuilder) insertSuffix(str []byte, prefix int) {
+func (b *Builder) insertSuffix(str []byte, prefix int) {
 	for i := len(str); i > prefix; i-- {
 		target := b.replaceOrRegister(b.tmpStates[i])
 		b.tmpStates[i] = TmpState{Final: false, Data: 0}
@@ -75,7 +75,7 @@ func (b *SparseTableDFABuilder) insertSuffix(str []byte, prefix int) {
 	}
 }
 
-func (b *SparseTableDFABuilder) replaceOrRegister(tmp TmpState) uint32 {
+func (b *Builder) replaceOrRegister(tmp TmpState) uint32 {
 	str := tmp.String()
 	if target, ok := b.register[str]; ok {
 		return target
