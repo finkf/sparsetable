@@ -1,4 +1,4 @@
-package fsa
+package sparsetable
 
 type fuzzyState struct {
 	str  string

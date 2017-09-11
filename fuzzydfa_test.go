@@ -1,4 +1,4 @@
-package fsa
+package sparsetable
 
 import (
 	"testing"
