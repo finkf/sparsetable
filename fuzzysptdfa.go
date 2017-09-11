@@ -38,6 +38,11 @@ func NewFuzzySparseTableDFA(k int, dfa *SparseTableDFA) *FuzzySparseTableDFA {
 	return &FuzzySparseTableDFA{k: k, dfa: dfa}
 }
 
+// MaxError returns the maximum allowed error for the fuzzy DFA.
+func (d *FuzzySparseTableDFA) MaxError() int {
+	return d.k
+}
+
 // Initial returns the initial active states of the approximate match for str.
 func (d *FuzzySparseTableDFA) Initial(str string) FuzzyStack {
 	var s FuzzyStack
