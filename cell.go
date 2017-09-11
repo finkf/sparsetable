@@ -56,20 +56,18 @@ func (c Cell) Empty() bool {
 	return c.typ == emptyCellType
 }
 
-// Target returns the target position of transition cell. It panics
-// if it is called on a cell that does not represent a transtion.
+// Target returns the target position of transition cell.
 func (c Cell) Target() uint32 {
 	if !c.Transition() {
-		panic("called Target() on a cell that is not a transition")
+		return 0
 	}
 	return uint32(c.data)
 }
 
 // Char returns the character (byte) that the transition cell represents.
-// It panics if it is called on a cell that does not represent a transtion.
 func (c Cell) Char() byte {
 	if !c.Transition() {
-		panic("called Char() on a cell that is not a transition")
+		return 0
 	}
 	return c.char
 }
@@ -83,14 +81,14 @@ func (c Cell) Next() uint32 {
 func (c Cell) String() string {
 	switch c.typ {
 	case emptyCellType:
-		return "{}"
+		return "EmptyCell{}"
 	case finalCellType:
-		return fmt.Sprintf("{data: %d, next: %d}", c.data, c.next)
+		return fmt.Sprintf("FinalCell{data:%d,next:%d}", c.data, c.next)
 	case nonFinalCellType:
-		return fmt.Sprintf("{next: %d}", c.next)
+		return fmt.Sprintf("NonFinalCell{next:%d}", c.next)
 	case transitionCellType:
-		return fmt.Sprintf("{char: %c, target: %d, next: %d}",
-			c.char, c.data, c.next)
+		return fmt.Sprintf("TransitionCell{target:%d,char:%c,next:%d}",
+			c.data, c.char, c.next)
 	default:
 		panic("invalid cell type")
 	}
