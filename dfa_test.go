@@ -36,7 +36,7 @@ func TestEmptySparseTableDFA(t *testing.T) {
 
 func TestSingleEntrySparseTableDFA(t *testing.T) {
 	for i, str := range teststrs {
-		dfa := NewSparseTableDFA(str)
+		dfa := NewDictionary(str)
 		for _, test := range teststrs {
 			if accepts(dfa, test) && test != str {
 				t.Errorf("[%d] dfa accepts %q", i, test)
@@ -50,7 +50,7 @@ func TestSingleEntrySparseTableDFA(t *testing.T) {
 }
 
 func TestSparseTableDFA(t *testing.T) {
-	dfa := NewSparseTableDFA(teststrs...)
+	dfa := NewDictionary(teststrs...)
 	for i, test := range teststrs {
 		if !accepts(dfa, test) {
 			t.Errorf("[%d] dfa does not accept %q", i, test)
@@ -59,7 +59,7 @@ func TestSparseTableDFA(t *testing.T) {
 }
 
 func TestEachTransition(t *testing.T) {
-	dfa := NewSparseTableDFA(teststrs...)
+	dfa := NewDictionary(teststrs...)
 	chars := make(map[byte]bool)
 	dfa.EachTransition(dfa.Initial(), func(cell Cell) {
 		if cell.typ != transitionCellType {
@@ -111,7 +111,7 @@ func makeRandomStrings(n int, r *rand.Rand) (map[string]bool, []string) {
 
 func makeRandomSparseTableDFA(n int, seed int64, r *rand.Rand) (*DFA, map[string]bool) {
 	m, s := makeRandomStrings(n, r)
-	return NewSparseTableDFA(s...), m
+	return NewDictionary(s...), m
 }
 
 func makeR() (int64, *rand.Rand) {

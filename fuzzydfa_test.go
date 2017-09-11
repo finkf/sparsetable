@@ -31,7 +31,7 @@ func TestEmptyFuzzyDFA(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			dfa := NewFuzzySparseTableDFA(3, new(DFA))
+			dfa := NewFuzzyDFA(3, new(DFA))
 			final, _ := fuzzyAccepts(dfa, tc.test)
 			if final {
 				t.Fatalf("empty DFA should not accept %q", tc.test)
@@ -69,7 +69,7 @@ func TestSingleEntryFuzzyDFA(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			dfa := NewFuzzySparseTableDFA(3, NewSparseTableDFA(tc.entry))
+			dfa := NewFuzzyDFA(3, NewDictionary(tc.entry))
 			final, k := fuzzyAccepts(dfa, tc.test)
 			if final != tc.accept {
 				t.Fatalf("expected accept(%q) = %t; got %t", tc.test, tc.accept, final)

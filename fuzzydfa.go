@@ -32,9 +32,9 @@ type FuzzyDFA struct {
 	k   int
 }
 
-// NewFuzzySparseTableDFA create a new FuzzyDFA with a given
+// NewFuzzyDFA create a new FuzzyDFA with a given
 // error limit k and a given DFA
-func NewFuzzySparseTableDFA(k int, dfa *DFA) *FuzzyDFA {
+func NewFuzzyDFA(k int, dfa *DFA) *FuzzyDFA {
 	return &FuzzyDFA{k: k, dfa: dfa}
 }
 

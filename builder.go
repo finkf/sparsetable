@@ -14,7 +14,7 @@ type Builder struct {
 	table     SparseTable
 }
 
-// NewSparseTableDFABuilder return a new instance of a Builder.
+// NewBuilder return a new instance of a Builder.
 func NewBuilder() *Builder {
 	return &Builder{register: make(map[string]uint32)}
 }
