@@ -14,7 +14,7 @@ func (f FuzzyStack) push(max int, dfa *DFA, s fuzzyState) FuzzyStack {
 		dfa.EachTransition(s.s, func(cell Cell) {
 			f = f.push(max, dfa, fuzzyState{
 				k:   s.k + 1,
-				s:   cell.data,
+				s:   cell.Target(),
 				i:   s.i,
 				str: s.str,
 			})
@@ -56,7 +56,7 @@ func (d *FuzzyDFA) Initial(str string) FuzzyStack {
 
 // FinalStateCallback is a callback function that is called on final states.
 // It is called using the active error, the next position and the data.
-type FinalStateCallback func(int, int, uint32)
+type FinalStateCallback func(int, int, int32)
 
 // Delta make one transtion on the top of the stack. If a final state is encountered,
 // the callback function is called.
@@ -83,7 +83,7 @@ func (d *FuzzyDFA) deltaDiagonal(f FuzzyStack, s fuzzyState) FuzzyStack {
 	d.dfa.EachTransition(s.s, func(cell Cell) {
 		f = f.push(d.k, d.dfa, fuzzyState{
 			k:   s.k + 1,
-			s:   cell.data,
+			s:   cell.Target(),
 			i:   s.i + 1,
 			str: s.str,
 		})

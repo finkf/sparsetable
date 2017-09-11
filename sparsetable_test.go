@@ -5,8 +5,9 @@ import "testing"
 func TestAddEmpty(t *testing.T) {
 	var st SparseTable
 	for i, tc := range []struct {
-		final     bool
-		data, pos uint32
+		final bool
+		data  int32
+		pos   uint32
 	}{
 		{true, 42, 0},
 		{false, 42, 1},
@@ -23,7 +24,7 @@ func TestAddEmpty(t *testing.T) {
 				i, tc.final, final)
 		}
 		// only final state cells have data
-		var f uint32
+		var f int32
 		if tc.final {
 			f = 1
 		}

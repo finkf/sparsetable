@@ -21,7 +21,7 @@ func (t TmpStateTransition) String() string {
 // It contains a sorted list of
 type TmpState struct {
 	Transitions []TmpStateTransition
-	Data        uint32
+	Data        int32
 	Final       bool
 }
 

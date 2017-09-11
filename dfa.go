@@ -52,7 +52,7 @@ func (d *DFA) Delta(s uint32, c byte) uint32 {
 
 // Final returns the (data, true) if the given state is final.
 // If the given state is not final, (0, false) is returned.
-func (d *DFA) Final(s uint32) (uint32, bool) {
+func (d *DFA) Final(s uint32) (int32, bool) {
 	n := uint32(len(d.table))
 	if s <= 0 || n <= s || d.table[s-1].typ != finalCellType {
 		return 0, false

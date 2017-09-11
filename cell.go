@@ -13,12 +13,12 @@ const (
 // or transition cell or an empty cell. Cells are used to repesent
 // either transitions or states in a DFA.
 type Cell struct {
-	data            uint32
+	data            int32
 	char, typ, next byte
 }
 
 // FinalCell creates a final cell.
-func FinalCell(data uint32, next byte) Cell {
+func FinalCell(data int32, next byte) Cell {
 	return Cell{data: data, next: next, typ: finalCellType}
 }
 
@@ -29,7 +29,7 @@ func NonFinalCell(next byte) Cell {
 
 // TransitionCell creates a transtion cell
 func TransitionCell(target uint32, char byte, next byte) Cell {
-	return Cell{data: target, char: char, next: next, typ: transitionCellType}
+	return Cell{data: int32(target), char: char, next: next, typ: transitionCellType}
 }
 
 // State retruns true iff the cell is either a final or a non final state cell.
@@ -39,8 +39,11 @@ func (c Cell) State() bool {
 
 // Final returns the asociated data of the cell and true if the
 // cell represent a final state, Otherwise it returns 0, false.
-func (c Cell) Final() (uint32, bool) {
-	return c.data, c.typ == finalCellType
+func (c Cell) Final() (int32, bool) {
+	if c.typ != finalCellType {
+		return 0, false
+	}
+	return c.data, true
 }
 
 // Transition return true iff the cell represents a transtion.
@@ -59,7 +62,7 @@ func (c Cell) Target() uint32 {
 	if !c.Transition() {
 		panic("called Target() on a cell that is not a transition")
 	}
-	return c.data
+	return uint32(c.data)
 }
 
 // Char returns the character (byte) that the transition cell represents.

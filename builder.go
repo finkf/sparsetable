@@ -9,7 +9,7 @@ import (
 type Builder struct {
 	register  map[string]uint32
 	curstr    []byte
-	curdat    uint32
+	curdat    int32
 	tmpStates []TmpState
 	table     SparseTable
 }
@@ -21,7 +21,7 @@ func NewBuilder() *Builder {
 
 // Add adds a (string, value) pair to the sparse table. Add returns an error
 // iff the added strings are not in byte-wise lexicographical order.
-func (b *Builder) Add(str string, data uint32) error {
+func (b *Builder) Add(str string, data int32) error {
 	nextstr := []byte(str)
 	if b.curstr == nil {
 		b.curstr = nextstr
