@@ -140,9 +140,14 @@ func makeRandomStrings(n int, r *rand.Rand) (map[string]bool, []string) {
 	return m, s
 }
 
-func TestFuzzy(t *testing.T) {
+func makeR() (int64, *rand.Rand) {
 	seed := rand.Int63()
 	r := rand.New(rand.NewSource(seed))
+	return seed, r
+}
+
+func TestFuzzy(t *testing.T) {
+	seed, r := makeR()
 	m, s := makeRandomStrings(100, r)
 	b := NewSparseTableDFABuilder()
 	for _, str := range s {
@@ -151,6 +156,11 @@ func TestFuzzy(t *testing.T) {
 		}
 	}
 	dfa := b.Build()
+	for str := range m {
+		if !accepts(dfa, str) {
+			t.Errorf("dfa does not accept %q (%d)", str, seed)
+		}
+	}
 	for i := 0; i < 10000; i++ {
 		str := makeRandomString(r)
 		if accepts(dfa, str) && !m[str] {
