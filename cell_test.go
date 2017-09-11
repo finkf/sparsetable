@@ -62,7 +62,7 @@ func TestCellTraits(t *testing.T) {
 				t.Fatalf("expected target = %d; got %d", tc.target, res)
 			}
 			if res, _ := tc.cell.Final(); res != tc.data {
-				t.Fatalf("expected data = %t; got %t", tc.data, res)
+				t.Fatalf("expected data = %d; got %d", tc.data, res)
 			}
 		})
 	}
