@@ -90,7 +90,7 @@ func (t *SparseTable) fits(i uint32, tmp TmpState) bool {
 		return false
 	}
 	for _, trans := range tmp.Transitions {
-		if t.Cells[i+uint32(trans.char)].typ != emptyCellType {
+		if !t.Cells[i+uint32(trans.char)].Empty() {
 			return false
 		}
 	}
@@ -105,6 +105,6 @@ func (t *SparseTable) nextFreeCell() {
 		if t.Cells[t.free].Empty() {
 			break
 		}
-		t.free += 1
+		t.free++
 	}
 }

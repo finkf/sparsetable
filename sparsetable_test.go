@@ -63,14 +63,14 @@ func TestAdd(t *testing.T) {
 		}
 		for j, tt := range tc.ts {
 			cell := st.Cells[tc.pos+uint32(tt.char)]
-			if cell.typ != transitionCellType {
+			if !cell.Transition() {
 				t.Errorf("[%d:%d] expected transition cell\n", i, j)
 			}
-			if cell.char != tt.char {
+			if cell.Char() != tt.char {
 				t.Errorf("[%d:%d] expected char = %c; got char = %c\n",
 					i, j, tt.char, cell.char)
 			}
-			if cell.data != tt.target {
+			if cell.Target() != tt.target {
 				t.Errorf("[%d:%d] expected data = %d; got data = %d\n",
 					i, j, tt.char, cell.data)
 			}

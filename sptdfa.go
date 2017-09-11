@@ -26,11 +26,11 @@ func (d *SparseTableDFA) Delta(s uint32, c byte) uint32 {
 	}
 	s--
 	if !d.table[s].State() ||
-		d.table[s+o].typ != transitionCellType ||
-		d.table[s+o].char != c {
+		!d.table[s+o].Transition() ||
+		d.table[s+o].Char() != c {
 		return 0
 	}
-	return d.table[s+o].data + 1
+	return d.table[s+o].Target() + 1
 }
 
 // Final returns the (data, true) if the given state is final.
@@ -40,18 +40,19 @@ func (d *SparseTableDFA) Final(s uint32) (uint32, bool) {
 	if s <= 0 || n <= s || d.table[s-1].typ != finalCellType {
 		return 0, false
 	}
-	return d.table[s-1].data, true
+	return d.table[s-1].Final()
 }
 
-// EachTransition iterates over all transitions of the given state.
+// EachTransition iterates over all transitions of the given state calling
+// the callback function f for each transition cell.
 func (d *SparseTableDFA) EachTransition(s uint32, f func(Cell)) {
 	n := uint32(len(d.table))
 	if s <= 0 || s > n || !d.table[s-1].State() {
 		panic("invalid cell type in EachTransition: not a state cell")
 	}
-	for i := d.table[s-1].next; i > 0; i = d.table[s-1+uint32(i)].next {
-		cell := d.table[s+uint32(i)-1]
-		if cell.typ != transitionCellType {
+	for i := d.table[s-1].Next(); i > 0; i = d.table[s-1+i].Next() {
+		cell := d.table[s+i-1]
+		if !cell.Transition() {
 			panic("invalid cell type in EachTransition: not a transition cell")
 		}
 		f(cell)
