@@ -140,6 +140,18 @@ func makeRandomStrings(n int, r *rand.Rand) (map[string]bool, []string) {
 	return m, s
 }
 
+func makeRandomSparseTableDFA(n int, seed int64, r *rand.Rand) (*SparseTableDFA, map[string]bool, error) {
+	m, s := makeRandomStrings(n, r)
+	b := NewSparseTableDFABuilder()
+	for _, str := range s {
+		if err := b.Add(str, 1); err != nil {
+			return nil, nil, err
+		}
+	}
+	dfa := b.Build()
+	return dfa, m, nil
+}
+
 func makeR() (int64, *rand.Rand) {
 	seed := rand.Int63()
 	r := rand.New(rand.NewSource(seed))
@@ -148,14 +160,10 @@ func makeR() (int64, *rand.Rand) {
 
 func TestFuzzy(t *testing.T) {
 	seed, r := makeR()
-	m, s := makeRandomStrings(100, r)
-	b := NewSparseTableDFABuilder()
-	for _, str := range s {
-		if err := b.Add(str, 1); err != nil {
-			t.Fatalf("could not add string: %v (%d)", err, seed)
-		}
+	dfa, m, err := makeRandomSparseTableDFA(100, seed, r)
+	if err != nil {
+		t.Fatalf("could not add string: %v (%d)", err, seed)
 	}
-	dfa := b.Build()
 	for str := range m {
 		if !accepts(dfa, str) {
 			t.Errorf("dfa does not accept %q (%d)", str, seed)
