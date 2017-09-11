@@ -16,7 +16,7 @@ var teststrs = []string{
 	"floabc",
 }
 
-func accepts(dfa *SparseTableDFA, str string) bool {
+func accepts(dfa *DFA, str string) bool {
 	s := dfa.Initial()
 	for i := 0; i < len(str) && s != 0; i++ {
 		s = dfa.Delta(s, str[i])
@@ -26,7 +26,7 @@ func accepts(dfa *SparseTableDFA, str string) bool {
 }
 
 func TestEmptySparseTableDFA(t *testing.T) {
-	dfa := &SparseTableDFA{}
+	dfa := &DFA{}
 	for i, str := range teststrs {
 		if accepts(dfa, str) {
 			t.Errorf("[%d] dfa accepts %q", i, str)
@@ -109,7 +109,7 @@ func makeRandomStrings(n int, r *rand.Rand) (map[string]bool, []string) {
 	return m, s
 }
 
-func makeRandomSparseTableDFA(n int, seed int64, r *rand.Rand) (*SparseTableDFA, map[string]bool) {
+func makeRandomSparseTableDFA(n int, seed int64, r *rand.Rand) (*DFA, map[string]bool) {
 	m, s := makeRandomStrings(n, r)
 	return NewSparseTableDFA(s...), m
 }

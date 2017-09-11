@@ -8,15 +8,15 @@ import (
 	"unicode"
 )
 
-// SparseTableDFA is a DFA implementation using a sparse table.
-type SparseTableDFA struct {
+// DFA is a DFA implementation using a sparse table.
+type DFA struct {
 	table   []Cell
 	initial uint32
 }
 
 // NewSparseTableDFA builds a minimized sparse table DFA from a list of strings.
 // NewSparseTableDFA panics if the build process fails.
-func NewSparseTableDFA(strs ...string) *SparseTableDFA {
+func NewSparseTableDFA(strs ...string) *DFA {
 	b := NewSparseTableDFABuilder()
 	sort.Slice(strs, func(i, j int) bool {
 		return bytes.Compare([]byte(strs[i]), []byte(strs[j])) < 0
@@ -30,12 +30,12 @@ func NewSparseTableDFA(strs ...string) *SparseTableDFA {
 }
 
 // Initial returns the initial state of the DFA.
-func (d *SparseTableDFA) Initial() uint32 {
+func (d *DFA) Initial() uint32 {
 	return d.initial
 }
 
 // Delta makes on transition from the given state s with the given byte c.
-func (d *SparseTableDFA) Delta(s uint32, c byte) uint32 {
+func (d *DFA) Delta(s uint32, c byte) uint32 {
 	n := uint32(len(d.table))
 	o := uint32(c)
 	if s <= 0 || s > n || s+o > n {
@@ -52,7 +52,7 @@ func (d *SparseTableDFA) Delta(s uint32, c byte) uint32 {
 
 // Final returns the (data, true) if the given state is final.
 // If the given state is not final, (0, false) is returned.
-func (d *SparseTableDFA) Final(s uint32) (uint32, bool) {
+func (d *DFA) Final(s uint32) (uint32, bool) {
 	n := uint32(len(d.table))
 	if s <= 0 || n <= s || d.table[s-1].typ != finalCellType {
 		return 0, false
@@ -62,7 +62,7 @@ func (d *SparseTableDFA) Final(s uint32) (uint32, bool) {
 
 // EachTransition iterates over all transitions of the given state calling
 // the callback function f for each transition cell.
-func (d *SparseTableDFA) EachTransition(s uint32, f func(Cell)) {
+func (d *DFA) EachTransition(s uint32, f func(Cell)) {
 	n := uint32(len(d.table))
 	if s <= 0 || s > n {
 		return
@@ -80,7 +80,7 @@ func (d *SparseTableDFA) EachTransition(s uint32, f func(Cell)) {
 }
 
 // Dot prints out the dotcode for the DFA.
-func (d *SparseTableDFA) Dot(out io.Writer) {
+func (d *DFA) Dot(out io.Writer) {
 	dot := "// dotcode\n"
 	fmt.Fprintf(out, "digraph dfa { %s", dot)
 	fmt.Fprintf(out, " rankdir=LR; %s", dot)

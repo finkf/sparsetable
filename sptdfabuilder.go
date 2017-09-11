@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// SparseTableDFABuilder is used to build a SparseTableDFA.
+// SparseTableDFABuilder is used to build a DFA.
 type SparseTableDFABuilder struct {
 	register  map[string]uint32
 	curstr    []byte
@@ -41,15 +41,15 @@ func (b *SparseTableDFABuilder) Add(str string, data uint32) error {
 }
 
 // Build finishes the building of the automaton and returns it.
-func (b *SparseTableDFABuilder) Build() *SparseTableDFA {
+func (b *SparseTableDFABuilder) Build() *DFA {
 	if b.curstr == nil {
-		return &SparseTableDFA{}
+		return &DFA{}
 	}
 
 	b.initTmpStates()
 	b.insertSuffix(b.curstr, 0)
 	initial := b.table.Add(b.tmpStates[0])
-	return &SparseTableDFA{
+	return &DFA{
 		table:   b.table.Cells,
 		initial: initial + 1,
 	}

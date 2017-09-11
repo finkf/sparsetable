@@ -9,7 +9,7 @@ type fuzzyState struct {
 // FuzzyStack keeps track of the active states during the apporimxate search.
 type FuzzyStack []fuzzyState
 
-func (f FuzzyStack) push(max int, dfa *SparseTableDFA, s fuzzyState) FuzzyStack {
+func (f FuzzyStack) push(max int, dfa *DFA, s fuzzyState) FuzzyStack {
 	if s.k < max {
 		dfa.EachTransition(s.s, func(cell Cell) {
 			f = f.push(max, dfa, fuzzyState{
@@ -28,13 +28,13 @@ func (f FuzzyStack) push(max int, dfa *SparseTableDFA, s fuzzyState) FuzzyStack 
 
 // FuzzySparseTableDFA is the basic struct for approximate matching on a DFA.
 type FuzzySparseTableDFA struct {
-	dfa *SparseTableDFA
+	dfa *DFA
 	k   int
 }
 
 // NewFuzzySparseTableDFA create a new FuzzySparseTableDFA with a given
 // error limit k and a given DFA
-func NewFuzzySparseTableDFA(k int, dfa *SparseTableDFA) *FuzzySparseTableDFA {
+func NewFuzzySparseTableDFA(k int, dfa *DFA) *FuzzySparseTableDFA {
 	return &FuzzySparseTableDFA{k: k, dfa: dfa}
 }
 

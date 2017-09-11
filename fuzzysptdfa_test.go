@@ -31,7 +31,7 @@ func TestEmptyFuzzyDFA(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			dfa := NewFuzzySparseTableDFA(3, new(SparseTableDFA))
+			dfa := NewFuzzySparseTableDFA(3, new(DFA))
 			final, _ := fuzzyAccepts(dfa, tc.test)
 			if final {
 				t.Fatalf("empty DFA should not accept %q", tc.test)
