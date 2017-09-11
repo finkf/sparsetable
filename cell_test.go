@@ -29,11 +29,14 @@ func TestCellTraits(t *testing.T) {
 		name                            string
 		cell                            Cell
 		final, transition, state, empty bool
+		char                            byte
+		next, target                    uint32
+		data                            int32
 	}{
-		{"empty cell", Cell{}, false, false, false, true},
-		{"non final cell", NonFinalCell(0), false, false, true, false},
-		{"final cell", FinalCell(1, 0), true, false, true, false},
-		{"transition cell", TransitionCell(0, 'a', 0), false, true, false, false},
+		{"empty cell", Cell{}, false, false, false, true, 0, 0, 0, 0},
+		{"non final cell", NonFinalCell(8), false, false, true, false, 0, 8, 0, 0},
+		{"final cell", FinalCell(1, 10), true, false, true, false, 0, 10, 0, 1},
+		{"transition cell", TransitionCell(42, 'a', 13), false, true, false, false, 'a', 13, 42, 0},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -48,6 +51,18 @@ func TestCellTraits(t *testing.T) {
 			}
 			if res := tc.cell.Empty(); res != tc.empty {
 				t.Fatalf("expected empty = %t; got %t", tc.empty, res)
+			}
+			if res := tc.cell.Char(); res != tc.char {
+				t.Fatalf("expected char = %c; got %c", tc.char, res)
+			}
+			if res := tc.cell.Next(); res != tc.next {
+				t.Fatalf("expected next = %d; got %d", tc.next, res)
+			}
+			if res := tc.cell.Target(); res != tc.target {
+				t.Fatalf("expected target = %d; got %d", tc.target, res)
+			}
+			if res, _ := tc.cell.Final(); res != tc.data {
+				t.Fatalf("expected data = %t; got %t", tc.data, res)
 			}
 		})
 	}
