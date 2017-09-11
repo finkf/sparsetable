@@ -47,13 +47,16 @@ func (d *SparseTableDFA) Final(s uint32) (uint32, bool) {
 // the callback function f for each transition cell.
 func (d *SparseTableDFA) EachTransition(s uint32, f func(Cell)) {
 	n := uint32(len(d.table))
-	if s <= 0 || s > n || !d.table[s-1].State() {
-		panic("invalid cell type in EachTransition: not a state cell")
+	if s <= 0 || s > n {
+		return
+	}
+	if !d.table[s-1].State() {
+		panic(fmt.Sprintf("invalid cell type in EachTransition: %s", d.table[s-1]))
 	}
 	for i := d.table[s-1].Next(); i > 0; i = d.table[s-1+i].Next() {
 		cell := d.table[s+i-1]
 		if !cell.Transition() {
-			panic("invalid cell type in EachTransition: not a transition cell")
+			panic(fmt.Sprintf("invalid cell type in EachTransition: %s", cell))
 		}
 		f(cell)
 	}

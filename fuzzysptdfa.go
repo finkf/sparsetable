@@ -49,8 +49,13 @@ func (d *FuzzySparseTableDFA) Initial(str string) FuzzyStack {
 	})
 }
 
-// Delta make one transtion on the top of the stack.
-func (d *FuzzySparseTableDFA) Delta(f FuzzyStack, str string, cb func(int, string, uint32)) FuzzyStack {
+// FinalStateCallback is a callback function that is called on final states.
+// It is called using the active error, the next position and the data.
+type FinalStateCallback func(int, int, uint32)
+
+// Delta make one transtion on the top of the stack. If a final state is encountered,
+// the callback function is called.
+func (d *FuzzySparseTableDFA) Delta(f FuzzyStack, str string, cb FinalStateCallback) FuzzyStack {
 	n := len(f)
 	if n == 0 {
 		return nil
@@ -61,7 +66,7 @@ func (d *FuzzySparseTableDFA) Delta(f FuzzyStack, str string, cb func(int, strin
 	f = d.deltaHorizontal(f, top)
 	f = d.deltaVertical(f, top)
 	if data, final := d.dfa.Final(top.s); final {
-		cb(top.i, top.str, data)
+		cb(top.k, top.i, data)
 	}
 	return f
 }
