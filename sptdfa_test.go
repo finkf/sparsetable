@@ -1,10 +1,8 @@
 package fsa
 
 import (
-	"bytes"
 	"fmt"
 	"math/rand"
-	"sort"
 	"testing"
 )
 
@@ -38,11 +36,7 @@ func TestEmptySparseTableDFA(t *testing.T) {
 
 func TestSingleEntrySparseTableDFA(t *testing.T) {
 	for i, str := range teststrs {
-		b := NewSparseTableDFABuilder()
-		if err := b.Add(str, 1); err != nil {
-			t.Errorf("[%d] error: %q", i, err)
-		}
-		dfa := b.Build()
+		dfa := NewSparseTableDFA(str)
 		for _, test := range teststrs {
 			if accepts(dfa, test) && test != str {
 				t.Errorf("[%d] dfa accepts %q", i, test)
@@ -56,18 +50,7 @@ func TestSingleEntrySparseTableDFA(t *testing.T) {
 }
 
 func TestSparseTableDFA(t *testing.T) {
-	b := NewSparseTableDFABuilder()
-	sorted := make([]string, len(teststrs))
-	copy(sorted, teststrs)
-	sort.Slice(sorted, func(i, j int) bool {
-		return bytes.Compare([]byte(sorted[i]), []byte(sorted[j])) < 0
-	})
-	for i, str := range sorted {
-		if err := b.Add(str, 1); err != nil {
-			t.Fatalf("[%d] could not add %q: %s", i, str, err)
-		}
-	}
-	dfa := b.Build()
+	dfa := NewSparseTableDFA(teststrs...)
 	for i, test := range teststrs {
 		if !accepts(dfa, test) {
 			t.Errorf("[%d] dfa does not accept %q", i, test)
@@ -76,18 +59,7 @@ func TestSparseTableDFA(t *testing.T) {
 }
 
 func TestEachTransition(t *testing.T) {
-	b := NewSparseTableDFABuilder()
-	sorted := make([]string, len(teststrs))
-	copy(sorted, teststrs)
-	sort.Slice(sorted, func(i, j int) bool {
-		return bytes.Compare([]byte(sorted[i]), []byte(sorted[j])) < 0
-	})
-	for i, str := range sorted {
-		if err := b.Add(str, 1); err != nil {
-			t.Errorf("[%d] could not add %q: %s", i, str, err)
-		}
-	}
-	dfa := b.Build()
+	dfa := NewSparseTableDFA(teststrs...)
 	chars := make(map[byte]bool)
 	dfa.EachTransition(dfa.Initial(), func(cell Cell) {
 		if cell.typ != transitionCellType {
@@ -134,22 +106,12 @@ func makeRandomStrings(n int, r *rand.Rand) (map[string]bool, []string) {
 			s = append(s, str)
 		}
 	}
-	sort.Slice(s, func(i, j int) bool {
-		return bytes.Compare([]byte(s[i]), []byte(s[j])) < 0
-	})
 	return m, s
 }
 
-func makeRandomSparseTableDFA(n int, seed int64, r *rand.Rand) (*SparseTableDFA, map[string]bool, error) {
+func makeRandomSparseTableDFA(n int, seed int64, r *rand.Rand) (*SparseTableDFA, map[string]bool) {
 	m, s := makeRandomStrings(n, r)
-	b := NewSparseTableDFABuilder()
-	for _, str := range s {
-		if err := b.Add(str, 1); err != nil {
-			return nil, nil, err
-		}
-	}
-	dfa := b.Build()
-	return dfa, m, nil
+	return NewSparseTableDFA(s...), m
 }
 
 func makeR() (int64, *rand.Rand) {
@@ -160,10 +122,7 @@ func makeR() (int64, *rand.Rand) {
 
 func TestFuzzy(t *testing.T) {
 	seed, r := makeR()
-	dfa, m, err := makeRandomSparseTableDFA(100, seed, r)
-	if err != nil {
-		t.Fatalf("could not add string: %v (%d)", err, seed)
-	}
+	dfa, m := makeRandomSparseTableDFA(100, seed, r)
 	for str := range m {
 		if !accepts(dfa, str) {
 			t.Errorf("dfa does not accept %q (%d)", str, seed)
