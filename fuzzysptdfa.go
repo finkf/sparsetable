@@ -26,25 +26,25 @@ func (f FuzzyStack) push(max int, dfa *DFA, s fuzzyState) FuzzyStack {
 	return f
 }
 
-// FuzzySparseTableDFA is the basic struct for approximate matching on a DFA.
-type FuzzySparseTableDFA struct {
+// FuzzyDFA is the basic struct for approximate matching on a DFA.
+type FuzzyDFA struct {
 	dfa *DFA
 	k   int
 }
 
-// NewFuzzySparseTableDFA create a new FuzzySparseTableDFA with a given
+// NewFuzzySparseTableDFA create a new FuzzyDFA with a given
 // error limit k and a given DFA
-func NewFuzzySparseTableDFA(k int, dfa *DFA) *FuzzySparseTableDFA {
-	return &FuzzySparseTableDFA{k: k, dfa: dfa}
+func NewFuzzySparseTableDFA(k int, dfa *DFA) *FuzzyDFA {
+	return &FuzzyDFA{k: k, dfa: dfa}
 }
 
 // MaxError returns the maximum allowed error for the fuzzy DFA.
-func (d *FuzzySparseTableDFA) MaxError() int {
+func (d *FuzzyDFA) MaxError() int {
 	return d.k
 }
 
 // Initial returns the initial active states of the approximate match for str.
-func (d *FuzzySparseTableDFA) Initial(str string) FuzzyStack {
+func (d *FuzzyDFA) Initial(str string) FuzzyStack {
 	var s FuzzyStack
 	return s.push(d.k, d.dfa, fuzzyState{
 		k:   0,
@@ -60,7 +60,7 @@ type FinalStateCallback func(int, int, uint32)
 
 // Delta make one transtion on the top of the stack. If a final state is encountered,
 // the callback function is called.
-func (d *FuzzySparseTableDFA) Delta(f FuzzyStack, str string, cb FinalStateCallback) FuzzyStack {
+func (d *FuzzyDFA) Delta(f FuzzyStack, str string, cb FinalStateCallback) FuzzyStack {
 	n := len(f)
 	if n == 0 {
 		return nil
@@ -76,7 +76,7 @@ func (d *FuzzySparseTableDFA) Delta(f FuzzyStack, str string, cb FinalStateCallb
 	return f
 }
 
-func (d *FuzzySparseTableDFA) deltaDiagonal(f FuzzyStack, s fuzzyState) FuzzyStack {
+func (d *FuzzyDFA) deltaDiagonal(f FuzzyStack, s fuzzyState) FuzzyStack {
 	if d.k <= s.k || len(s.str) <= s.i {
 		return f
 	}
@@ -91,7 +91,7 @@ func (d *FuzzySparseTableDFA) deltaDiagonal(f FuzzyStack, s fuzzyState) FuzzySta
 	return f
 }
 
-func (d *FuzzySparseTableDFA) deltaVertical(f FuzzyStack, s fuzzyState) FuzzyStack {
+func (d *FuzzyDFA) deltaVertical(f FuzzyStack, s fuzzyState) FuzzyStack {
 	if d.k <= s.k || len(s.str) <= s.i {
 		return f
 	}
@@ -103,7 +103,7 @@ func (d *FuzzySparseTableDFA) deltaVertical(f FuzzyStack, s fuzzyState) FuzzySta
 	})
 }
 
-func (d *FuzzySparseTableDFA) deltaHorizontal(f FuzzyStack, s fuzzyState) FuzzyStack {
+func (d *FuzzyDFA) deltaHorizontal(f FuzzyStack, s fuzzyState) FuzzyStack {
 	if len(s.str) <= s.i {
 		return f
 	}
