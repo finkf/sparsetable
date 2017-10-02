@@ -60,7 +60,7 @@ type FinalStateCallback func(int, int, int32)
 
 // Delta make one transtion on the top of the stack. If a final state is encountered,
 // the callback function is called.
-func (d *FuzzyDFA) Delta(f FuzzyStack, str string, cb FinalStateCallback) FuzzyStack {
+func (d *FuzzyDFA) Delta(f FuzzyStack, cb FinalStateCallback) FuzzyStack {
 	n := len(f)
 	if n == 0 {
 		return nil

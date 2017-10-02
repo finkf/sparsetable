@@ -9,7 +9,7 @@ func fuzzyAccepts(dfa *FuzzyDFA, str string) (bool, int) {
 	mink := dfa.MaxError() + 1
 	var final bool
 	for len(s) > 0 {
-		s = dfa.Delta(s, str, func(k, pos int, data int32) {
+		s = dfa.Delta(s, func(k, pos int, data int32) {
 			if pos != len(str) {
 				return
 			}
