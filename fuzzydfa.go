@@ -9,6 +9,11 @@ type fuzzyState struct {
 // FuzzyStack keeps track of the active states during the apporimxate search.
 type FuzzyStack []fuzzyState
 
+// Empty returns true iff this stack is empty.
+func (f FuzzyStack) Empty() bool {
+	return len(f) == 0
+}
+
 func (f FuzzyStack) push(max int, dfa *DFA, s fuzzyState) FuzzyStack {
 	if s.k < max {
 		dfa.EachTransition(s.s, func(cell Cell) {
