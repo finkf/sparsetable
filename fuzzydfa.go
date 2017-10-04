@@ -1,34 +1,78 @@
 package sparsetable
 
 type fuzzyState struct {
-	str  string
-	k, i int
-	s    uint32
+	lev, next int
+	state     State
 }
 
 // FuzzyStack keeps track of the active states during the apporimxate search.
-type FuzzyStack []fuzzyState
-
-// Empty returns true iff this stack is empty.
-func (f FuzzyStack) Empty() bool {
-	return len(f) == 0
+type FuzzyStack struct {
+	stack []fuzzyState
+	dfa   *DFA
+	str   string
+	max   int
 }
 
-func (f FuzzyStack) push(max int, dfa *DFA, s fuzzyState) FuzzyStack {
-	if s.k < max {
-		dfa.EachTransition(s.s, func(cell Cell) {
-			f = f.push(max, dfa, fuzzyState{
-				k:   s.k + 1,
-				s:   cell.Target(),
-				i:   s.i,
-				str: s.str,
+func (f *FuzzyStack) empty() bool {
+	return len(f.stack) == 0
+}
+
+func (f *FuzzyStack) pop() fuzzyState {
+	n := len(f.stack)
+	if n == 0 {
+		panic("called pop() on empty stack")
+	}
+	top := f.stack[n-1]
+	f.stack = f.stack[0 : n-1]
+	return top
+}
+
+func (f *FuzzyStack) push(s fuzzyState) {
+	if s.lev < f.max {
+		f.dfa.EachTransition(s.state, func(cell Cell) {
+			f.push(fuzzyState{
+				lev:   s.lev + 1,
+				state: State(cell.Target()),
+				next:  s.next,
 			})
 		})
 	}
-	if s.k <= max {
-		f = append(f, s)
+	if s.lev <= f.max && s.next <= len(f.str) && s.state >= 0 {
+		f.stack = append(f.stack, s)
 	}
-	return f
+}
+
+func (f *FuzzyStack) deltaDiagonal(s fuzzyState) {
+	f.dfa.EachTransition(s.state, func(cell Cell) {
+		f.push(fuzzyState{
+			lev:   s.lev + 1,
+			state: State(cell.Target()),
+			next:  s.next + 1,
+		})
+	})
+}
+
+func (f *FuzzyStack) deltaVertical(s fuzzyState) {
+	f.push(fuzzyState{
+		lev:   s.lev + 1,
+		state: s.state,
+		next:  s.next + 1,
+	})
+}
+
+func (f *FuzzyStack) deltaHorizontal(s fuzzyState) {
+	if s.next >= len(f.str) {
+		return
+	}
+	x := f.dfa.Delta(s.state, f.str[s.next])
+	if !x.Valid() {
+		return
+	}
+	f.push(fuzzyState{
+		lev:   s.lev,
+		state: x,
+		next:  s.next + 1,
+	})
 }
 
 // FuzzyDFA is the basic struct for approximate matching on a DFA.
@@ -49,14 +93,18 @@ func (d *FuzzyDFA) MaxError() int {
 }
 
 // Initial returns the initial active states of the approximate match for str.
-func (d *FuzzyDFA) Initial(str string) FuzzyStack {
-	var s FuzzyStack
-	return s.push(d.k, d.dfa, fuzzyState{
-		k:   0,
-		s:   d.dfa.Initial(),
-		i:   0,
+func (d *FuzzyDFA) Initial(str string) *FuzzyStack {
+	s := &FuzzyStack{
 		str: str,
+		dfa: d.dfa,
+		max: d.k,
+	}
+	s.push(fuzzyState{
+		lev:   0,
+		state: d.dfa.Initial(),
+		next:  0,
 	})
+	return s
 }
 
 // FinalStateCallback is a callback function that is called on final states.
@@ -64,62 +112,18 @@ func (d *FuzzyDFA) Initial(str string) FuzzyStack {
 type FinalStateCallback func(int, int, int32)
 
 // Delta make one transtion on the top of the stack. If a final state is encountered,
-// the callback function is called.
-func (d *FuzzyDFA) Delta(f FuzzyStack, cb FinalStateCallback) FuzzyStack {
-	n := len(f)
-	if n == 0 {
-		return nil
+// the callback function is called. It returns false if no more transitions
+// can be done with the active stack.
+func (d *FuzzyDFA) Delta(f *FuzzyStack, cb FinalStateCallback) bool {
+	if f.empty() {
+		return false
 	}
-	top := f[n-1]
-	f = f[:n-1]
-	f = d.deltaDiagonal(f, top)
-	f = d.deltaHorizontal(f, top)
-	f = d.deltaVertical(f, top)
-	if data, final := d.dfa.Final(top.s); final {
-		cb(top.k, top.i, data)
+	top := f.pop()
+	f.deltaDiagonal(top)
+	f.deltaHorizontal(top)
+	f.deltaVertical(top)
+	if data, final := d.dfa.Final(top.state); final {
+		cb(top.lev, top.next, data)
 	}
-	return f
-}
-
-func (d *FuzzyDFA) deltaDiagonal(f FuzzyStack, s fuzzyState) FuzzyStack {
-	if d.k <= s.k || len(s.str) <= s.i {
-		return f
-	}
-	d.dfa.EachTransition(s.s, func(cell Cell) {
-		f = f.push(d.k, d.dfa, fuzzyState{
-			k:   s.k + 1,
-			s:   cell.Target(),
-			i:   s.i + 1,
-			str: s.str,
-		})
-	})
-	return f
-}
-
-func (d *FuzzyDFA) deltaVertical(f FuzzyStack, s fuzzyState) FuzzyStack {
-	if d.k <= s.k || len(s.str) <= s.i {
-		return f
-	}
-	return f.push(d.k, d.dfa, fuzzyState{
-		k:   s.k + 1,
-		s:   s.s,
-		i:   s.i + 1,
-		str: s.str,
-	})
-}
-
-func (d *FuzzyDFA) deltaHorizontal(f FuzzyStack, s fuzzyState) FuzzyStack {
-	if len(s.str) <= s.i {
-		return f
-	}
-	x := d.dfa.Delta(s.s, s.str[s.i])
-	if x == 0 {
-		return f
-	}
-	return f.push(d.k, d.dfa, fuzzyState{
-		k:   s.k,
-		s:   x,
-		i:   s.i + 1,
-		str: s.str,
-	})
+	return true
 }
