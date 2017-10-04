@@ -1,9 +1,9 @@
 package sparsetable
 
 type fuzzyState struct {
-	str  string
-	k, i int
-	s    uint32
+	str       string
+	lev, next int
+	state     uint32
 }
 
 // FuzzyStack keeps track of the active states during the apporimxate search.
@@ -15,17 +15,17 @@ func (f FuzzyStack) Empty() bool {
 }
 
 func (f FuzzyStack) push(max int, dfa *DFA, s fuzzyState) FuzzyStack {
-	if s.k < max {
-		dfa.EachTransition(s.s, func(cell Cell) {
+	if s.lev < max {
+		dfa.EachTransition(s.state, func(cell Cell) {
 			f = f.push(max, dfa, fuzzyState{
-				k:   s.k + 1,
-				s:   cell.Target(),
-				i:   s.i,
-				str: s.str,
+				lev:   s.lev + 1,
+				state: cell.Target(),
+				next:  s.next,
+				str:   s.str,
 			})
 		})
 	}
-	if s.k <= max {
+	if s.lev <= max {
 		f = append(f, s)
 	}
 	return f
@@ -52,10 +52,10 @@ func (d *FuzzyDFA) MaxError() int {
 func (d *FuzzyDFA) Initial(str string) FuzzyStack {
 	var s FuzzyStack
 	return s.push(d.k, d.dfa, fuzzyState{
-		k:   0,
-		s:   d.dfa.Initial(),
-		i:   0,
-		str: str,
+		lev:   0,
+		state: d.dfa.Initial(),
+		next:  0,
+		str:   str,
 	})
 }
 
@@ -75,51 +75,51 @@ func (d *FuzzyDFA) Delta(f FuzzyStack, cb FinalStateCallback) FuzzyStack {
 	f = d.deltaDiagonal(f, top)
 	f = d.deltaHorizontal(f, top)
 	f = d.deltaVertical(f, top)
-	if data, final := d.dfa.Final(top.s); final {
-		cb(top.k, top.i, data)
+	if data, final := d.dfa.Final(top.state); final {
+		cb(top.lev, top.next, data)
 	}
 	return f
 }
 
 func (d *FuzzyDFA) deltaDiagonal(f FuzzyStack, s fuzzyState) FuzzyStack {
-	if d.k <= s.k || len(s.str) <= s.i {
+	if d.k <= s.lev || len(s.str) <= s.next {
 		return f
 	}
-	d.dfa.EachTransition(s.s, func(cell Cell) {
+	d.dfa.EachTransition(s.state, func(cell Cell) {
 		f = f.push(d.k, d.dfa, fuzzyState{
-			k:   s.k + 1,
-			s:   cell.Target(),
-			i:   s.i + 1,
-			str: s.str,
+			lev:   s.lev + 1,
+			state: cell.Target(),
+			next:  s.next + 1,
+			str:   s.str,
 		})
 	})
 	return f
 }
 
 func (d *FuzzyDFA) deltaVertical(f FuzzyStack, s fuzzyState) FuzzyStack {
-	if d.k <= s.k || len(s.str) <= s.i {
+	if d.k <= s.lev || len(s.str) <= s.next {
 		return f
 	}
 	return f.push(d.k, d.dfa, fuzzyState{
-		k:   s.k + 1,
-		s:   s.s,
-		i:   s.i + 1,
-		str: s.str,
+		lev:   s.lev + 1,
+		state: s.state,
+		next:  s.next + 1,
+		str:   s.str,
 	})
 }
 
 func (d *FuzzyDFA) deltaHorizontal(f FuzzyStack, s fuzzyState) FuzzyStack {
-	if len(s.str) <= s.i {
+	if len(s.str) <= s.next {
 		return f
 	}
-	x := d.dfa.Delta(s.s, s.str[s.i])
+	x := d.dfa.Delta(s.state, s.str[s.next])
 	if x == 0 {
 		return f
 	}
 	return f.push(d.k, d.dfa, fuzzyState{
-		k:   s.k,
-		s:   x,
-		i:   s.i + 1,
-		str: s.str,
+		lev:   s.lev,
+		state: x,
+		next:  s.next + 1,
+		str:   s.str,
 	})
 }
