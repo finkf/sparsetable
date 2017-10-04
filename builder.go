@@ -51,7 +51,7 @@ func (b *Builder) Build() *DFA {
 	initial := b.table.Add(b.tmpStates[0])
 	return &DFA{
 		table:   b.table.Cells,
-		initial: initial + 1,
+		initial: int(initial),
 	}
 }
 
