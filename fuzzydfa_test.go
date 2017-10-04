@@ -9,8 +9,6 @@ func fuzzyAccepts(dfa *FuzzyDFA, str string) (bool, int) {
 	mink := dfa.MaxError() + 1
 	var final bool
 	for dfa.Delta(s, func(k, pos int, data int32) {
-		// log.Printf("str=%q", str[:pos])
-		// log.Printf(" - k=%d, pos=%d, data=%d", k, pos, data)
 		if pos != len(str) {
 			return
 		}
@@ -18,12 +16,8 @@ func fuzzyAccepts(dfa *FuzzyDFA, str string) (bool, int) {
 			mink = k
 		}
 		final = true
-		// log.Printf(" - final=%t, mink=%d", final, mink)
 	}) {
-		// log.Printf("stack: %v", *s)
 	}
-	// log.Printf("s = %v", *s)
-	// log.Printf("accept(%q) = %t, %d", str, final, mink)
 	return final, mink
 }
 
@@ -88,14 +82,6 @@ func TestSingleEntryFuzzyDFA(t *testing.T) {
 
 func TestMatchesFuzzyDFA(t *testing.T) {
 	dfa := NewFuzzyDFA(3, NewDictionary("match", "match two"))
-	// dfa := NewFuzzyDFA(3, NewDictionary("match"))
-	// log.Printf("Initial: %d", dfa.dfa.initial)
-	for i := 0; i < len(dfa.dfa.table); i++ {
-		if !dfa.dfa.table[i].Empty() {
-			// log.Printf("%d %v", i, dfa.dfa.table[i])
-		}
-	}
-	// dfa.dfa.Dot(os.Stdout)
 	tests := []struct {
 		test   string
 		k      int

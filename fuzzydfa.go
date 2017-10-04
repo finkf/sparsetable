@@ -28,11 +28,7 @@ func (f *FuzzyStack) pop() fuzzyState {
 
 func (f *FuzzyStack) push(s fuzzyState) {
 	if s.lev < f.max {
-		// log.Printf("State(%v): %v", s.state, f.dfa.CellAt(s.state))
 		f.dfa.EachTransition(s.state, func(cell Cell) {
-			// log.Printf("Cell: %v", cell)
-			// log.Printf("Epsilon from %d %c -> %d", s.state, cell.Char(), cell.Target())
-			// log.Printf("Next state(%v): %v", cell.Target(), f.dfa.CellAt(int(cell.Target())))
 			f.push(fuzzyState{
 				lev:   s.lev + 1,
 				state: int(cell.Target()),
@@ -41,15 +37,12 @@ func (f *FuzzyStack) push(s fuzzyState) {
 		})
 	}
 	if s.lev <= f.max && s.next <= len(f.str) && s.state >= 0 {
-		// log.Printf("pusing %v", s)
 		f.stack = append(f.stack, s)
 	}
 }
 
 func (f *FuzzyStack) deltaDiagonal(s fuzzyState) {
 	f.dfa.EachTransition(s.state, func(cell Cell) {
-		// log.Printf("deltaDiagonal(%v): at %d with %c -> %d",
-		// 	s, s.next, cell.Char(), cell.Target())
 		f.push(fuzzyState{
 			lev:   s.lev + 1,
 			state: int(cell.Target()),
@@ -59,7 +52,6 @@ func (f *FuzzyStack) deltaDiagonal(s fuzzyState) {
 }
 
 func (f *FuzzyStack) deltaVertical(s fuzzyState) {
-	// log.Printf("deltaVertical(%v): at %d", s, s.next)
 	f.push(fuzzyState{
 		lev:   s.lev + 1,
 		state: s.state,
@@ -75,8 +67,6 @@ func (f *FuzzyStack) deltaHorizontal(s fuzzyState) {
 	if x < 0 {
 		return
 	}
-	// log.Printf("deltaHorizontal(%v): (at pos = %d) from %d with %c -> %d",
-	// 	s, s.next, s.state, f.str[s.next], x)
 	f.push(fuzzyState{
 		lev:   s.lev,
 		state: x,
@@ -108,7 +98,6 @@ func (d *FuzzyDFA) Initial(str string) *FuzzyStack {
 		dfa: d.dfa,
 		max: d.k,
 	}
-	// log.Printf("Initial: %d", d.dfa.Initial())
 	s.push(fuzzyState{
 		lev:   0,
 		state: d.dfa.Initial(),
@@ -129,15 +118,11 @@ func (d *FuzzyDFA) Delta(f *FuzzyStack, cb FinalStateCallback) bool {
 		return false
 	}
 	top := f.pop()
-	// log.Printf("top: %v", top)
-	// log.Printf("stack: %v", f.stack)
 	f.deltaDiagonal(top)
 	f.deltaHorizontal(top)
 	f.deltaVertical(top)
 	if data, final := d.dfa.Final(top.state); final {
 		cb(top.lev, top.next, data)
 	}
-	// log.Printf("stack: %v", f.stack)
-	// log.Printf("####")
 	return true
 }
