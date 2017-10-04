@@ -95,6 +95,10 @@ func TestMatchesFuzzyDFA(t *testing.T) {
 		{"ma  tch", 2, true},
 		{"ma   tch", 3, true},
 		{"ma   xch", 0, false},
+		{"matc", 1, true},
+		{"mtc", 2, true},
+		{"tc", 3, true},
+		{"t", 0, false},
 		{"match two", 0, true},
 		{"mxtch two", 1, true},
 		{"mxtchtwo", 2, true},
@@ -105,6 +109,10 @@ func TestMatchesFuzzyDFA(t *testing.T) {
 		{"mxtc  two", 2, true},
 		{"mxtc   two", 3, true},
 		{"mxtc    two", 0, false},
+		{"matchtwo", 1, true},
+		{"atchtwo", 2, true},
+		{"tchtwo", 3, true},
+		{"tchto", 0, false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.test, func(t *testing.T) {
