@@ -8,17 +8,22 @@ func fuzzyAccepts(dfa *FuzzyDFA, str string) (bool, int) {
 	s := dfa.Initial(str)
 	mink := dfa.MaxError() + 1
 	var final bool
-	for !s.Empty() {
-		s = dfa.Delta(s, func(k, pos int, data int32) {
-			if pos != len(str) {
-				return
-			}
-			if k < mink {
-				mink = k
-			}
-			final = true
-		})
+	for dfa.Delta(s, func(k, pos int, data int32) {
+		// log.Printf("str=%q", str[:pos])
+		// log.Printf(" - k=%d, pos=%d, data=%d", k, pos, data)
+		if pos != len(str) {
+			return
+		}
+		if k < mink {
+			mink = k
+		}
+		final = true
+		// log.Printf(" - final=%t, mink=%d", final, mink)
+	}) {
+		// log.Printf("stack: %v", *s)
 	}
+	// log.Printf("s = %v", *s)
+	// log.Printf("accept(%q) = %t, %d", str, final, mink)
 	return final, mink
 }
 
@@ -64,8 +69,8 @@ func TestSingleEntryFuzzyDFA(t *testing.T) {
 		{"a with k>3", "a", "axxxx", 0, false},
 		{"a with k>3", "a", "xaxxx", 0, false},
 		{"a with k>3", "a", "xxaxx", 0, false},
-		{"a with k>3", "a", "xaxxx", 0, false},
-		{"a with k>3", "a", "axxxx", 0, false},
+		{"a with k>3", "a", "xxxax", 0, false},
+		{"a with k>3", "a", "xxxxa", 0, false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -83,13 +88,37 @@ func TestSingleEntryFuzzyDFA(t *testing.T) {
 
 func TestMatchesFuzzyDFA(t *testing.T) {
 	dfa := NewFuzzyDFA(3, NewDictionary("match", "match two"))
+	// dfa := NewFuzzyDFA(3, NewDictionary("match"))
+	// log.Printf("Initial: %d", dfa.dfa.initial)
+	for i := 0; i < len(dfa.dfa.table); i++ {
+		if !dfa.dfa.table[i].Empty() {
+			// log.Printf("%d %v", i, dfa.dfa.table[i])
+		}
+	}
+	// dfa.dfa.Dot(os.Stdout)
 	tests := []struct {
 		test   string
 		k      int
 		accept bool
 	}{
-		{"motch", 1, true},
-		{"motch to", 2, true},
+		{"match", 0, true},
+		{"mxtch", 1, true},
+		{"mxxch", 2, true},
+		{"mxxxh", 3, true},
+		{"ma tch", 1, true},
+		{"ma  tch", 2, true},
+		{"ma   tch", 3, true},
+		{"ma   xch", 0, false},
+		{"match two", 0, true},
+		{"mxtch two", 1, true},
+		{"mxtchtwo", 2, true},
+		{"mxtch   two", 3, true},
+		{"mxtch to", 2, true},
+		{"mxtch tw", 2, true},
+		{"mxtc to", 3, true},
+		{"mxtc  two", 2, true},
+		{"mxtc   two", 3, true},
+		{"mxtc    two", 0, false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.test, func(t *testing.T) {
