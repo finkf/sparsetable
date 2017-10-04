@@ -80,3 +80,28 @@ func TestSingleEntryFuzzyDFA(t *testing.T) {
 		})
 	}
 }
+
+func TestMatchesFuzzyDFA(t *testing.T) {
+	dfa := NewFuzzyDFA(3, NewDictionary("match", "match two"))
+	tests := []struct {
+		test   string
+		k      int
+		accept bool
+	}{
+		{"motch", 1, true},
+		{"motch to", 2, true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.test, func(t *testing.T) {
+			final, k := fuzzyAccepts(dfa, tc.test)
+			if final != tc.accept {
+				t.Fatalf("expected accept(%q)=%t; got %t",
+					tc.test, tc.accept, final)
+			}
+			if final && tc.k != k {
+				t.Fatalf("expected accept(%q)=%d; got %d",
+					tc.test, tc.k, k)
+			}
+		})
+	}
+}
