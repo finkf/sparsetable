@@ -1,7 +1,8 @@
 package sparsetable
 
 type fuzzyState struct {
-	lev, next, state int
+	lev, next int
+	state     State
 }
 
 // FuzzyStack keeps track of the active states during the apporimxate search.
@@ -31,7 +32,7 @@ func (f *FuzzyStack) push(s fuzzyState) {
 		f.dfa.EachTransition(s.state, func(cell Cell) {
 			f.push(fuzzyState{
 				lev:   s.lev + 1,
-				state: int(cell.Target()),
+				state: State(cell.Target()),
 				next:  s.next,
 			})
 		})
@@ -45,7 +46,7 @@ func (f *FuzzyStack) deltaDiagonal(s fuzzyState) {
 	f.dfa.EachTransition(s.state, func(cell Cell) {
 		f.push(fuzzyState{
 			lev:   s.lev + 1,
-			state: int(cell.Target()),
+			state: State(cell.Target()),
 			next:  s.next + 1,
 		})
 	})
@@ -64,7 +65,7 @@ func (f *FuzzyStack) deltaHorizontal(s fuzzyState) {
 		return
 	}
 	x := f.dfa.Delta(s.state, f.str[s.next])
-	if x < 0 {
+	if !x.Valid() {
 		return
 	}
 	f.push(fuzzyState{

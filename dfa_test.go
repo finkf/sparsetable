@@ -18,7 +18,7 @@ var teststrs = []string{
 
 func accepts(dfa *DFA, str string) bool {
 	s := dfa.Initial()
-	for i := 0; i < len(str) && s >= 0; i++ {
+	for i := 0; i < len(str) && s.Valid(); i++ {
 		s = dfa.Delta(s, str[i])
 	}
 	_, final := dfa.Final(s)
