@@ -9,7 +9,7 @@ type fuzzyState struct {
 type FuzzyStack struct {
 	stack []fuzzyState
 	dfa   *DFA
-	str   string
+	str   []byte
 	max   int
 }
 
@@ -93,7 +93,7 @@ func (d *FuzzyDFA) MaxError() int {
 }
 
 // Initial returns the initial active states of the approximate match for str.
-func (d *FuzzyDFA) Initial(str string) *FuzzyStack {
+func (d *FuzzyDFA) Initial(str []byte) *FuzzyStack {
 	s := &FuzzyStack{
 		str: str,
 		dfa: d.dfa,
