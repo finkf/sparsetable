@@ -6,6 +6,7 @@ import (
 	"io"
 	"sort"
 	"unicode"
+	"unicode/utf8"
 )
 
 // State represents a the state of a DFA.
@@ -48,45 +49,87 @@ func (d *DFA) Initial() State {
 }
 
 // Delta makes on transition from the given state s with the given byte c.
-func (d *DFA) Delta(s State, c byte) State {
-	state := int(s)
-	n := len(d.table)
-	o := int(c)
-	if state < 0 || state >= n || state+o >= n {
+func (d DFA) Delta(s State, c byte) State {
+	if !d.valid(s, validAnyState) {
 		return -1
 	}
-	if !d.table[s].State() ||
-		!d.table[state+o].Transition() ||
-		d.table[state+o].Char() != c {
+	o := State(c)
+	if int(s+o) >= len(d.table) ||
+		!d.table[s+o].Transition() ||
+		d.table[s+o].Char() != c {
 		return -1
 	}
-	return State(d.table[state+o].Target())
+	return State(d.table[s+o].Target())
 }
 
 // Final returns the (data, true) if the given state is final.
 // If the given state is not final, (0, false) is returned.
 func (d *DFA) Final(s State) (int32, bool) {
-	state := int(s)
-	n := len(d.table)
-	if state < 0 || state >= n || d.table[state].typ != finalCellType {
+	if !d.valid(s, validFinalState) {
 		return 0, false
 	}
-	return d.table[state].Final()
+	return d.table[s].Final()
 }
 
 // EachTransition iterates over all transitions of the given state calling
 // the callback function f for each transition cell.
 func (d *DFA) EachTransition(s State, f func(Cell)) {
-	state := int(s)
-	n := int(len(d.table))
-	if state < 0 || state >= n {
+	if !d.valid(s, validAnyState) {
 		return
 	}
-	if !d.table[s].State() {
-		panic(fmt.Sprintf("invalid cell type in EachTransition: %s", d.table[s]))
+	d.forEachTransition(s, f)
+}
+
+// EachUTF8Transition iterates over all transition of the given state
+// calling the callback function f for each transition.
+// EachUTF8Transition follows UTF8 mutlibyte sequences to ensure
+// that the callback is called for each valid unicode transition.
+func (d *DFA) EachUTF8Transition(s State, f func(rune, State)) {
+	if !d.valid(s, validAnyState) {
+		return
 	}
-	for i := int(d.table[state].Next()); i > 0; i = int(d.table[state+i].Next()) {
-		cell := d.table[state+i]
+	d.forEachTransition(s, func(cell Cell) {
+		if cell.Char() < utf8.RuneSelf {
+			f(rune(cell.Char()), State(cell.Target()))
+			return
+		}
+		buf := [utf8.UTFMax]byte{cell.Char()}
+		switch cell.Char() >> 4 {
+		case 0x0C, 0x0D:
+			d.forEachUTF8Transition(buf[:], 1, 1, State(cell.Target()), f)
+		case 0x0E:
+			d.forEachUTF8Transition(buf[:], 1, 2, State(cell.Target()), f)
+		case 0x0F:
+			d.forEachUTF8Transition(buf[:], 1, 3, State(cell.Target()), f)
+		default:
+			panic(fmt.Sprintf("invalid utf8 byte %b encountered (%b)", cell.Char(), cell.Char()>>4))
+		}
+	})
+}
+
+func (d DFA) forEachUTF8Transition(buf []byte, i, n int, s State, f func(rune, State)) {
+	if !d.valid(s, validAnyState) {
+		return
+	}
+	d.forEachTransition(s, func(cell Cell) {
+		if !utf8.RuneStart(cell.Char()) {
+			buf[i] = cell.Char()
+			if i == n {
+				r, _ := utf8.DecodeRune(buf)
+				f(r, State(cell.Target()))
+			} else {
+				d.forEachUTF8Transition(buf, i+1, n, State(cell.Target()), f)
+			}
+		}
+	})
+}
+
+func (d DFA) forEachTransition(s State, f func(Cell)) {
+	if !d.valid(s, validAnyState) {
+		return
+	}
+	for i := State(d.table[s].Next()); i > 0; i = State(d.table[s+i].Next()) {
+		cell := d.table[s+i]
 		if !cell.Transition() {
 			panic(fmt.Sprintf("invalid cell type in EachTransition: %s", cell))
 		}
@@ -94,13 +137,37 @@ func (d *DFA) EachTransition(s State, f func(Cell)) {
 	}
 }
 
+const (
+	validTransition = iota
+	validAnyState
+	validFinalState
+	validAny
+)
+
+func (d DFA) valid(s State, typ int) bool {
+	if s < 0 || int(s) >= len(d.table) {
+		return false
+	}
+	switch typ {
+	case validAny:
+		return true
+	case validAnyState:
+		return d.table[s].State()
+	case validFinalState:
+		_, final := d.table[s].Final()
+		return final
+	case validTransition:
+		return d.table[s].Transition()
+	}
+	return false
+}
+
 // CellAt returns the the cell of the given state.
 func (d *DFA) CellAt(s State) Cell {
-	state := int(s)
-	if state < 0 || state >= len(d.table) {
+	if !d.valid(s, validAny) {
 		return Cell{}
 	}
-	return d.table[state]
+	return d.table[s]
 }
 
 // Dot prints out the dotcode for the DFA.

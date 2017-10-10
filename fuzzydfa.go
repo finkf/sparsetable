@@ -1,6 +1,8 @@
 package sparsetable
 
-import "unicode/utf8"
+import (
+	"unicode/utf8"
+)
 
 type fuzzyState struct {
 	lev, next int
@@ -32,26 +34,27 @@ func (f *FuzzyStack) pop() fuzzyState {
 func (f *FuzzyStack) push(s fuzzyState) {
 	f.dfa.EachTransition(s.state, func(cell Cell) {
 		f.push(fuzzyState{
-			lev:   s.lev + 1,
+			lev:   incrError(s.lev, cell.Char()),
 			state: State(cell.Target()),
 			next:  s.next,
 		})
 	})
 	if s.lev <= f.max && s.next <= len(f.str) && s.state.Valid() {
+		if s.lev == 0 {
+			// log.Printf("pushing %v (%s)", s, f.str[s.next:])
+		}
 		f.stack = append(f.stack, s)
 	}
 }
 
 func (f *FuzzyStack) deltaDiagonal(s fuzzyState) {
-	if s.next < len(f.str) {
-		f.dfa.EachTransition(s.state, func(cell Cell) {
-			f.push(fuzzyState{
-				lev:   incrError(s.lev, f.str[s.next]),
-				state: State(cell.Target()),
-				next:  s.next + 1,
-			})
+	f.dfa.EachTransition(s.state, func(cell Cell) {
+		f.push(fuzzyState{
+			lev:   incrError(s.lev, cell.Char()),
+			state: State(cell.Target()),
+			next:  s.next + 1,
 		})
-	}
+	})
 }
 
 func (f *FuzzyStack) deltaVertical(s fuzzyState) {

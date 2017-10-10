@@ -77,6 +77,25 @@ func TestEachTransition(t *testing.T) {
 	}
 }
 
+func TestEachUTF8Transition(t *testing.T) {
+	dfa := NewDictionary("Cheese", "öh", "äber", "ßose", "в", "民x", "\U0001f600")
+	runes := make(map[rune]bool)
+	dfa.EachUTF8Transition(dfa.Initial(), func(r rune, s State) {
+		if !dfa.CellAt(s).State() {
+			t.Errorf("cell at %d is not a state: %v", s, dfa.CellAt(s))
+		}
+		runes[r] = true
+	})
+	if len(runes) != 7 {
+		t.Errorf("expected 7 transitions; got %d", len(runes))
+	}
+	for _, c := range []rune{'C', 'ä', 'ö', 'ß', 'в', '民', '\U0001f600'} {
+		if !runes[c] {
+			t.Errorf("expected chars to contain %c", c)
+		}
+	}
+}
+
 var chars = []rune{
 	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
 	'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
