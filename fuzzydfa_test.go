@@ -118,12 +118,10 @@ func TestMatchesFuzzyDFA(t *testing.T) {
 		t.Run(tc.test, func(t *testing.T) {
 			final, k := fuzzyAccepts(dfa, tc.test)
 			if final != tc.accept {
-				t.Fatalf("expected accept(%q)=%t; got %t",
-					tc.test, tc.accept, final)
+				t.Fatalf("expected accept(%q)=%t; got %t", tc.test, tc.accept, final)
 			}
 			if final && tc.k != k {
-				t.Fatalf("expected accept(%q)=%d; got %d",
-					tc.test, tc.k, k)
+				t.Fatalf("expected accept(%q)=%d; got %d", tc.test, tc.k, k)
 			}
 		})
 	}
