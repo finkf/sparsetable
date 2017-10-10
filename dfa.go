@@ -80,6 +80,16 @@ func (d *DFA) EachTransition(s State, f func(Cell)) {
 	d.forEachTransition(s, f)
 }
 
+var (
+	ulen = [...]int{
+		1, 1, 1, 1, 1, 1, 1, 1,
+		0, 0, 0, 0,
+		2, 2,
+		3,
+		4,
+	}
+)
+
 // EachUTF8Transition iterates over all transition of the given state
 // calling the callback function f for each transition.
 // EachUTF8Transition follows UTF8 mutlibyte sequences to ensure
@@ -89,36 +99,36 @@ func (d *DFA) EachUTF8Transition(s State, f func(rune, State)) {
 		return
 	}
 	d.forEachTransition(s, func(cell Cell) {
-		if cell.Char() < utf8.RuneSelf {
-			f(rune(cell.Char()), State(cell.Target()))
-			return
-		}
 		buf := [utf8.UTFMax]byte{cell.Char()}
-		switch cell.Char() >> 4 {
-		case 0x0C, 0x0D:
+		switch ulen[cell.Char()>>4] {
+		case 0:
+			f(0, State(cell.Target()))
+		case 1:
+			f(rune(cell.Char()), State(cell.Target()))
+		case 2: // two bytes
 			d.forEachUTF8Transition(buf[:], 1, 1, State(cell.Target()), f)
-		case 0x0E:
+		case 3: // three bytes
 			d.forEachUTF8Transition(buf[:], 1, 2, State(cell.Target()), f)
-		case 0x0F:
+		case 4: // four bytes
 			d.forEachUTF8Transition(buf[:], 1, 3, State(cell.Target()), f)
-		default:
-			panic(fmt.Sprintf("invalid utf8 byte %b encountered (%b)", cell.Char(), cell.Char()>>4))
+		default: // something else
+			panic(fmt.Sprintf("invalid utf8 byte %b encountered", cell.Char()))
 		}
 	})
 }
 
-func (d DFA) forEachUTF8Transition(buf []byte, i, n int, s State, f func(rune, State)) {
+func (d DFA) forEachUTF8Transition(buf []byte, i, end int, s State, f func(rune, State)) {
 	if !d.valid(s, validAnyState) {
 		return
 	}
 	d.forEachTransition(s, func(cell Cell) {
 		if !utf8.RuneStart(cell.Char()) {
 			buf[i] = cell.Char()
-			if i == n {
+			if i == end {
 				r, _ := utf8.DecodeRune(buf)
 				f(r, State(cell.Target()))
 			} else {
-				d.forEachUTF8Transition(buf, i+1, n, State(cell.Target()), f)
+				d.forEachUTF8Transition(buf, i+1, end, State(cell.Target()), f)
 			}
 		}
 	})

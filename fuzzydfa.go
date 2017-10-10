@@ -1,9 +1,5 @@
 package sparsetable
 
-import (
-	"unicode/utf8"
-)
-
 type fuzzyState struct {
 	lev, next int
 	state     State
@@ -32,26 +28,23 @@ func (f *FuzzyStack) pop() fuzzyState {
 }
 
 func (f *FuzzyStack) push(s fuzzyState) {
-	f.dfa.EachTransition(s.state, func(cell Cell) {
+	f.dfa.EachUTF8Transition(s.state, func(r rune, t State) {
 		f.push(fuzzyState{
-			lev:   incrError(s.lev, cell.Char()),
-			state: State(cell.Target()),
+			lev:   s.lev + 1,
+			state: t,
 			next:  s.next,
 		})
 	})
 	if s.lev <= f.max && s.next <= len(f.str) && s.state.Valid() {
-		if s.lev == 0 {
-			// log.Printf("pushing %v (%s)", s, f.str[s.next:])
-		}
 		f.stack = append(f.stack, s)
 	}
 }
 
 func (f *FuzzyStack) deltaDiagonal(s fuzzyState) {
-	f.dfa.EachTransition(s.state, func(cell Cell) {
+	f.dfa.EachUTF8Transition(s.state, func(r rune, t State) {
 		f.push(fuzzyState{
-			lev:   incrError(s.lev, cell.Char()),
-			state: State(cell.Target()),
+			lev:   s.lev + 1,
+			state: t,
 			next:  s.next + 1,
 		})
 	})
@@ -60,7 +53,7 @@ func (f *FuzzyStack) deltaDiagonal(s fuzzyState) {
 func (f *FuzzyStack) deltaVertical(s fuzzyState) {
 	if s.next < len(f.str) {
 		f.push(fuzzyState{
-			lev:   incrError(s.lev, f.str[s.next]),
+			lev:   s.lev + 1,
 			state: s.state,
 			next:  s.next + 1,
 		})
@@ -71,13 +64,13 @@ func (f *FuzzyStack) deltaHorizontal(s fuzzyState) {
 	if s.next >= len(f.str) {
 		return
 	}
-	x := f.dfa.Delta(s.state, f.str[s.next])
-	if !x.Valid() {
+	t := f.dfa.Delta(s.state, f.str[s.next])
+	if !t.Valid() {
 		return
 	}
 	f.push(fuzzyState{
 		lev:   s.lev,
-		state: x,
+		state: t,
 		next:  s.next + 1,
 	})
 }
@@ -86,13 +79,6 @@ func (f *FuzzyStack) delta(top fuzzyState) {
 	f.deltaDiagonal(top)
 	f.deltaHorizontal(top)
 	f.deltaVertical(top)
-}
-
-func incrError(k int, b byte) int {
-	if utf8.RuneStart(b) {
-		return k + 1
-	}
-	return k
 }
 
 // FuzzyDFA is the basic struct for approximate matching on a DFA.

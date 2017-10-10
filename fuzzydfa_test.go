@@ -136,6 +136,7 @@ func TestUTF8FuzzyDFA(t *testing.T) {
 		accept bool
 	}{
 		{"Bäume", 0, true},
+		{"Boime", 2, true},
 		{"bäume", 1, true},
 		{"Baume", 1, true},
 		{"Baum", 2, true},
