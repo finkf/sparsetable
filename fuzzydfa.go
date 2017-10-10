@@ -79,6 +79,12 @@ func (f *FuzzyStack) deltaHorizontal(s fuzzyState) {
 	})
 }
 
+func (f *FuzzyStack) delta(top fuzzyState) {
+	f.deltaDiagonal(top)
+	f.deltaHorizontal(top)
+	f.deltaVertical(top)
+}
+
 func incrError(k int, b byte) int {
 	if utf8.RuneStart(b) {
 		return k + 1
@@ -130,9 +136,7 @@ func (d *FuzzyDFA) Delta(f *FuzzyStack, cb FinalStateCallback) bool {
 		return false
 	}
 	top := f.pop()
-	f.deltaDiagonal(top)
-	f.deltaHorizontal(top)
-	f.deltaVertical(top)
+	f.delta(top)
 	if data, final := d.dfa.Final(top.state); final {
 		cb(top.lev, top.next, data)
 	}
