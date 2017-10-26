@@ -127,7 +127,6 @@ func TestMatchesFuzzyDFA(t *testing.T) {
 	}
 }
 
-/*
 func TestUTF8FuzzyDFA(t *testing.T) {
 	dfa := NewFuzzyDFA(3, NewDictionary("Bäume", "Волк"))
 	tests := []struct {
@@ -158,4 +157,3 @@ func TestUTF8FuzzyDFA(t *testing.T) {
 		})
 	}
 }
-*/
