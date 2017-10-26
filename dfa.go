@@ -1,7 +1,6 @@
 package sparsetable
 
 import (
-	"bytes"
 	"fmt"
 	"sort"
 	"unicode/utf8"
@@ -27,9 +26,7 @@ type DFA struct {
 // NewDictionary panics if the build process fails.
 func NewDictionary(strs ...string) *DFA {
 	b := NewBuilder()
-	sort.Slice(strs, func(i, j int) bool {
-		return bytes.Compare([]byte(strs[i]), []byte(strs[j])) < 0
-	})
+	sort.Strings(strs)
 	for _, str := range strs {
 		if err := b.Add(str, 1); err != nil {
 			panic(err)
