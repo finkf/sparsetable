@@ -62,7 +62,7 @@ func TestEachTransition(t *testing.T) {
 	dfa := NewDictionary(teststrs...)
 	chars := make(map[byte]bool)
 	dfa.EachTransition(dfa.Initial(), func(cell Cell) {
-		if cell.typ != transitionCellType {
+		if cell.typ != TransitionCell {
 			t.Errorf("expected transition cell; got %s", cell)
 		}
 		chars[cell.char] = true
