@@ -28,51 +28,57 @@ func (f *FuzzyStack) pop() fuzzyState {
 }
 
 func (f *FuzzyStack) push(s fuzzyState) {
-	if s.lev < f.max {
-		f.dfa.EachTransition(s.state, func(cell Cell) {
-			f.push(fuzzyState{
-				lev:   s.lev + 1,
-				state: State(cell.Target()),
-				next:  s.next,
-			})
+	f.dfa.EachUTF8Transition(s.state, func(r rune, t State) {
+		f.push(fuzzyState{
+			lev:   s.lev + 1,
+			state: t,
+			next:  s.next,
 		})
-	}
-	if s.lev <= f.max && s.next <= len(f.str) && s.state >= 0 {
+	})
+	if s.lev <= f.max && s.next <= len(f.str) && s.state.Valid() {
 		f.stack = append(f.stack, s)
 	}
 }
 
 func (f *FuzzyStack) deltaDiagonal(s fuzzyState) {
-	f.dfa.EachTransition(s.state, func(cell Cell) {
+	f.dfa.EachUTF8Transition(s.state, func(r rune, t State) {
 		f.push(fuzzyState{
 			lev:   s.lev + 1,
-			state: State(cell.Target()),
+			state: t,
 			next:  s.next + 1,
 		})
 	})
 }
 
 func (f *FuzzyStack) deltaVertical(s fuzzyState) {
-	f.push(fuzzyState{
-		lev:   s.lev + 1,
-		state: s.state,
-		next:  s.next + 1,
-	})
+	if s.next < len(f.str) {
+		f.push(fuzzyState{
+			lev:   s.lev + 1,
+			state: s.state,
+			next:  s.next + 1,
+		})
+	}
 }
 
 func (f *FuzzyStack) deltaHorizontal(s fuzzyState) {
 	if s.next >= len(f.str) {
 		return
 	}
-	x := f.dfa.Delta(s.state, f.str[s.next])
-	if !x.Valid() {
+	t := f.dfa.Delta(s.state, f.str[s.next])
+	if !t.Valid() {
 		return
 	}
 	f.push(fuzzyState{
 		lev:   s.lev,
-		state: x,
+		state: t,
 		next:  s.next + 1,
 	})
+}
+
+func (f *FuzzyStack) delta(top fuzzyState) {
+	f.deltaDiagonal(top)
+	f.deltaHorizontal(top)
+	f.deltaVertical(top)
 }
 
 // FuzzyDFA is the basic struct for approximate matching on a DFA.
@@ -119,9 +125,7 @@ func (d *FuzzyDFA) Delta(f *FuzzyStack, cb FinalStateCallback) bool {
 		return false
 	}
 	top := f.pop()
-	f.deltaDiagonal(top)
-	f.deltaHorizontal(top)
-	f.deltaVertical(top)
+	f.delta(top)
 	if data, final := d.dfa.Final(top.state); final {
 		cb(top.lev, top.next, data)
 	}

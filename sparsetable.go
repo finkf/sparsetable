@@ -53,9 +53,9 @@ func (t *SparseTable) doInsert(i uint32, tmp TmpState) {
 		next = tmp.Transitions[0].char
 	}
 	if tmp.Final {
-		t.Cells[i] = FinalCell(tmp.Data, next)
+		t.Cells[i] = NewFinalCell(tmp.Data, next)
 	} else {
-		t.Cells[i] = NonFinalCell(next)
+		t.Cells[i] = NewNonFinalCell(next)
 	}
 	for j, trans := range tmp.Transitions {
 		next = 0
@@ -63,7 +63,7 @@ func (t *SparseTable) doInsert(i uint32, tmp TmpState) {
 			next = tmp.Transitions[j+1].char
 		}
 		pos := i + uint32(trans.char)
-		t.Cells[pos] = TransitionCell(trans.target, trans.char, next)
+		t.Cells[pos] = NewTransitionCell(trans.target, trans.char, next)
 	}
 }
 

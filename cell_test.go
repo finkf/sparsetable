@@ -11,9 +11,9 @@ func TestCellSize(t *testing.T) {
 		cell Cell
 	}{
 		{"empty cell", Cell{}},
-		{"non final cell", NonFinalCell(0)},
-		{"final cell", FinalCell(1, 0)},
-		{"transition cell", TransitionCell(1, 'a', 0)},
+		{"non final cell", NewNonFinalCell(0)},
+		{"final cell", NewFinalCell(1, 0)},
+		{"transition cell", NewTransitionCell(1, 'a', 0)},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -34,9 +34,9 @@ func TestCellTraits(t *testing.T) {
 		data                            int32
 	}{
 		{"empty cell", Cell{}, false, false, false, true, 0, 0, 0, 0},
-		{"non final cell", NonFinalCell(8), false, false, true, false, 0, 8, 0, 0},
-		{"final cell", FinalCell(1, 10), true, false, true, false, 0, 10, 0, 1},
-		{"transition cell", TransitionCell(42, 'a', 13), false, true, false, false, 'a', 13, 42, 0},
+		{"non final cell", NewNonFinalCell(8), false, false, true, false, 0, 8, 0, 0},
+		{"final cell", NewFinalCell(1, 10), true, false, true, false, 0, 10, 0, 1},
+		{"transition cell", NewTransitionCell(42, 'a', 13), false, true, false, false, 'a', 13, 42, 0},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -75,13 +75,13 @@ func TestCellInternal(t *testing.T) {
 		test string
 	}{
 		{"empty cell", Cell{}, "EmptyCell{}"},
-		{"non final cell", NonFinalCell(0), "NonFinalCell{next:0}"},
-		{"non final cell", NonFinalCell(1), "NonFinalCell{next:1}"},
-		{"final cell", FinalCell(1, 0), "FinalCell{data:1,next:0}"},
-		{"final cell", FinalCell(2, 1), "FinalCell{data:2,next:1}"},
-		{"transition cell", TransitionCell(1, 'a', 0), "TransitionCell{target:1,char:a,next:0}"},
-		{"transition cell", TransitionCell(2, 'b', 1), "TransitionCell{target:2,char:b,next:1}"},
-		{"transition cell", TransitionCell(3, 'c', 2), "TransitionCell{target:3,char:c,next:2}"},
+		{"non final cell", NewNonFinalCell(0), "NonFinalCell{next:0}"},
+		{"non final cell", NewNonFinalCell(1), "NonFinalCell{next:1}"},
+		{"final cell", NewFinalCell(1, 0), "FinalCell{data:1,next:0}"},
+		{"final cell", NewFinalCell(2, 1), "FinalCell{data:2,next:1}"},
+		{"transition cell", NewTransitionCell(1, 'a', 0), "TransitionCell{target:1,char:a,next:0}"},
+		{"transition cell", NewTransitionCell(2, 'b', 1), "TransitionCell{target:2,char:b,next:1}"},
+		{"transition cell", NewTransitionCell(3, 'c', 2), "TransitionCell{target:3,char:c,next:2}"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

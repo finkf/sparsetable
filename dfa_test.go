@@ -62,7 +62,7 @@ func TestEachTransition(t *testing.T) {
 	dfa := NewDictionary(teststrs...)
 	chars := make(map[byte]bool)
 	dfa.EachTransition(dfa.Initial(), func(cell Cell) {
-		if cell.typ != transitionCellType {
+		if cell.typ != TransitionCell {
 			t.Errorf("expected transition cell; got %s", cell)
 		}
 		chars[cell.char] = true
@@ -72,6 +72,25 @@ func TestEachTransition(t *testing.T) {
 	}
 	for _, c := range []byte{'a', 'v', 'd', 'f', 's'} {
 		if !chars[c] {
+			t.Errorf("expected chars to contain %c", c)
+		}
+	}
+}
+
+func TestEachUTF8Transition(t *testing.T) {
+	dfa := NewDictionary("Cheese", "öh", "äber", "ßose", "в", "民x", "\U0001f600")
+	runes := make(map[rune]bool)
+	dfa.EachUTF8Transition(dfa.Initial(), func(r rune, s State) {
+		if !dfa.CellAt(s).State() {
+			t.Errorf("cell at %d is not a state: %v", s, dfa.CellAt(s))
+		}
+		runes[r] = true
+	})
+	if len(runes) != 7 {
+		t.Errorf("expected 7 transitions; got %d", len(runes))
+	}
+	for _, c := range []rune{'C', 'ä', 'ö', 'ß', 'в', '民', '\U0001f600'} {
+		if !runes[c] {
 			t.Errorf("expected chars to contain %c", c)
 		}
 	}

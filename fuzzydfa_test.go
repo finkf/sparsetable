@@ -118,12 +118,41 @@ func TestMatchesFuzzyDFA(t *testing.T) {
 		t.Run(tc.test, func(t *testing.T) {
 			final, k := fuzzyAccepts(dfa, tc.test)
 			if final != tc.accept {
-				t.Fatalf("expected accept(%q)=%t; got %t",
-					tc.test, tc.accept, final)
+				t.Fatalf("expected accept(%q)=%t; got %t", tc.test, tc.accept, final)
 			}
 			if final && tc.k != k {
-				t.Fatalf("expected accept(%q)=%d; got %d",
-					tc.test, tc.k, k)
+				t.Fatalf("expected accept(%q)=%d; got %d", tc.test, tc.k, k)
+			}
+		})
+	}
+}
+
+func TestUTF8FuzzyDFA(t *testing.T) {
+	dfa := NewFuzzyDFA(3, NewDictionary("Bäume", "Волк"))
+	tests := []struct {
+		test   string
+		k      int
+		accept bool
+	}{
+		{"Bäume", 0, true},
+		{"Boime", 2, true},
+		{"bäume", 1, true},
+		{"Baume", 1, true},
+		{"Baum", 2, true},
+		{"Böume", 1, true},
+		{"Волк", 0, true},
+		{"волк", 1, true},
+		{"Воlк", 1, true},
+		{"Водк", 1, true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.test, func(t *testing.T) {
+			final, k := fuzzyAccepts(dfa, tc.test)
+			if final != tc.accept {
+				t.Fatalf("expected accept(%q)=%t; got %t", tc.test, tc.accept, final)
+			}
+			if final && tc.k != k {
+				t.Fatalf("expected accept(%q)=%d; got %d", tc.test, tc.k, k)
 			}
 		})
 	}
