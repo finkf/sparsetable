@@ -1,6 +1,8 @@
 package sparsetable
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"sort"
 	"unicode/utf8"
@@ -180,4 +182,34 @@ func (d *DFA) EachCell(f func(Cell)) {
 	for _, cell := range d.table {
 		f(cell)
 	}
+}
+
+// GobDecode decodes a DFA from gob.
+func (d *DFA) GobDecode(bs []byte) error {
+	buffer := bytes.NewBuffer(bs)
+	decoder := gob.NewDecoder(buffer)
+	var initial State
+	var table []Cell
+	if err := decoder.Decode(&initial); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&table); err != nil {
+		return err
+	}
+	d.initial = initial
+	d.table = table
+	return nil
+}
+
+// GobEncode encods a DFA to gob.
+func (d *DFA) GobEncode() ([]byte, error) {
+	buffer := new(bytes.Buffer)
+	encoder := gob.NewEncoder(buffer)
+	if err := encoder.Encode(d.initial); err != nil {
+		return nil, err
+	}
+	if err := encoder.Encode(d.table); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
 }

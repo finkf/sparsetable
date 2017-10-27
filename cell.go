@@ -1,6 +1,10 @@
 package sparsetable
 
-import "fmt"
+import (
+	"bytes"
+	"encoding/gob"
+	"fmt"
+)
 
 // CellType represents the type of a cell.
 type CellType byte
@@ -107,4 +111,49 @@ func (c Cell) String() string {
 	default:
 		panic("invalid cell type")
 	}
+}
+
+// GobDecode decodes a cells from gob.
+func (c *Cell) GobDecode(bs []byte) error {
+	buffer := bytes.NewBuffer(bs)
+	decoder := gob.NewDecoder(buffer)
+	var data int32
+	var char, next byte
+	var typ CellType
+	if err := decoder.Decode(&data); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&char); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&next); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&typ); err != nil {
+		return err
+	}
+	c.data = data
+	c.char = char
+	c.next = next
+	c.typ = typ
+	return nil
+}
+
+// GobEncode encodes a cell to gob.
+func (c Cell) GobEncode() ([]byte, error) {
+	buffer := new(bytes.Buffer)
+	encoder := gob.NewEncoder(buffer)
+	if err := encoder.Encode(c.data); err != nil {
+		return nil, err
+	}
+	if err := encoder.Encode(c.char); err != nil {
+		return nil, err
+	}
+	if err := encoder.Encode(c.next); err != nil {
+		return nil, err
+	}
+	if err := encoder.Encode(c.typ); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
 }

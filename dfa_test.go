@@ -1,6 +1,8 @@
 package sparsetable
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -93,6 +95,31 @@ func TestEachUTF8Transition(t *testing.T) {
 		if !runes[c] {
 			t.Errorf("expected chars to contain %c", c)
 		}
+	}
+}
+
+func TestDFAToGOB(t *testing.T) {
+	tests := [][]string{
+		{"abc", "def", "ghi"},
+		{"für", "yбĸ", "z│ή"},
+	}
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("%v", tc), func(t *testing.T) {
+			dfa := NewDictionary(tc...)
+			buffer := new(bytes.Buffer)
+			if err := gob.NewEncoder(buffer).Encode(dfa); err != nil {
+				t.Fatalf("could not encode DFA: %v", err)
+			}
+			got := new(DFA)
+			if err := gob.NewDecoder(buffer).Decode(got); err != nil {
+				t.Fatalf("could not decode DFA: %v", err)
+			}
+			for _, str := range tc {
+				if !accepts(got, str) {
+					t.Fatalf("%s is not accepted", str)
+				}
+			}
+		})
 	}
 }
 
