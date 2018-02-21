@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sort"
 	"unicode/utf8"
+
+	"github.com/pkg/errors"
 )
 
 // State represents a the state of a DFA.
@@ -191,10 +193,10 @@ func (d *DFA) GobDecode(bs []byte) error {
 	var initial State
 	var table []Cell
 	if err := decoder.Decode(&initial); err != nil {
-		return err
+		return errors.Wrapf(err, "could not GOB decode initial state")
 	}
 	if err := decoder.Decode(&table); err != nil {
-		return err
+		return errors.Wrapf(err, "could not GOB decode sparse table")
 	}
 	d.initial = initial
 	d.table = table
@@ -206,10 +208,10 @@ func (d *DFA) GobEncode() ([]byte, error) {
 	buffer := new(bytes.Buffer)
 	encoder := gob.NewEncoder(buffer)
 	if err := encoder.Encode(d.initial); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "could not GOB encode initial state")
 	}
 	if err := encoder.Encode(d.table); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "could not GOB encode sparse table")
 	}
 	return buffer.Bytes(), nil
 }
