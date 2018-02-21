@@ -17,5 +17,6 @@ pipelines:
           #- go get -u golang.org/x/vgo
           #- vgo build
           #- vgo test -cover -race
+          - go get -v 
           - go test -cover -race
 
